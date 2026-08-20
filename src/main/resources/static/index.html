@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JCP Hackathon Project</title>
+    <style>
+        body { 
+            font-family: sans-serif; 
+            text-align: center; 
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        /* Stack the canvas directly on top of the video for AR */
+        .video-container { 
+            position: relative; 
+            display: inline-block; 
+            margin-top: 20px;
+        }
+        video { 
+            border: 3px solid #333; 
+            border-radius: 8px;
+            background-color: #000;
+        }
+        canvas { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            z-index: 10;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #004494;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hello World! The local server is running.</h1>
+    <p>Ready to build the hackathon project.</p>
+    
+    <!-- New AR UI Elements -->
+    <hr style="margin: 30px 0; border-top: 1px solid #ccc;">
+    <h2>Camera & AR Tracking Setup</h2>
+    <button id="startBtn">Enable Camera</button>
+
+    <div class="video-container">
+        <video id="webcam" autoplay playsinline width="640" height="480"></video>
+        <canvas id="overlay" width="640" height="480"></canvas>
+    </div>
+
+    <script>
+        const videoElement = document.getElementById('webcam');
+        const startBtn = document.getElementById('startBtn');
+
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { width: 640, height: 480 } 
+                });
+                videoElement.srcObject = stream;
+                startBtn.style.display = 'none'; 
+            } catch (err) {
+                console.error("Error accessing the camera: ", err);
+                alert("Please allow camera access to use the AR tracking feature.");
+            }
+        }
+
+        startBtn.addEventListener('click', startCamera);
+    </script>
+</body>
+</html>
