@@ -1,79 +1,60 @@
+<!-- 
+========================================================================
+File: index.html
+Description: The primary UI structure for the Camera App.
+             
+Overview:
+This file sets up the DOM (Document Object Model) elements. In web dev, 
+HTML provides the static structural objects (like the video player and 
+buttons), and we link our JavaScript file at the end to inject the logic 
+and handle user interactions.
+======================================================================== 
+-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JCP Hackathon Project</title>
-    <style>
-        body { 
-            font-family: sans-serif; 
-            text-align: center; 
-            background-color: #f4f4f4;
-            padding: 20px;
-        }
-        /* Stack the canvas directly on top of the video for AR */
-        .video-container { 
-            position: relative; 
-            display: inline-block; 
-            margin-top: 20px;
-        }
-        video { 
-            border: 3px solid #333; 
-            border-radius: 8px;
-            background-color: #000;
-        }
-        canvas { 
-            position: absolute; 
-            top: 0; 
-            left: 0; 
-            z-index: 10;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            background-color: #0056b3;
-            color: white;
-            border: none;
-            border-radius: 4px;
-        }
-        button:hover {
-            background-color: #004494;
-        }
-    </style>
+    <title>JCP Hackathon - Camera App</title>
 </head>
-<body>
+<body style="text-align: center; font-family: sans-serif;">
+    
     <h1>Hello World! The local server is running.</h1>
     <p>Ready to build the hackathon project.</p>
     
-    <!-- New AR UI Elements -->
-    <hr style="margin: 30px 0; border-top: 1px solid #ccc;">
     <h2>Camera & AR Tracking Setup</h2>
-    <button id="startBtn">Enable Camera</button>
+    
+    <!-- VIDEO VIEWPORT: This is where the live feed will be rendered. 
+         The 'autoplay' and 'playsinline' attributes ensure the stream 
+         starts rendering immediately once the JavaScript connects it. -->
+    <video id="video" autoplay playsinline style="border: 1px solid black; max-width: 100%;"></video>
+    <br><br>
 
-    <div class="video-container">
-        <video id="webcam" autoplay playsinline width="640" height="480"></video>
-        <canvas id="overlay" width="640" height="480"></canvas>
+    <!-- UI CONTROLS: Standard buttons waiting for JS EventListeners -->
+    <div>
+        <button id="toggleCamBtn" style="padding: 10px 20px; font-size: 16px; font-weight: bold; cursor: pointer;">
+            ▶️ Start Camera
+        </button>
+        <button id="captureBtn" style="padding: 10px 20px; font-size: 16px; font-weight: bold; cursor: pointer; margin-left: 10px;">
+            📸 Take Picture
+        </button>
     </div>
+    <br><br>
 
-    <script>
-        const videoElement = document.getElementById('webcam');
-        const startBtn = document.getElementById('startBtn');
+    <!-- MEMORY BUFFER: A common web dev trick. We use a <canvas> element 
+         but hide it from the UI (display:none). We use this hidden canvas 
+         to grab and process the video frame data in the background. -->
+    <canvas id="canvas" style="display:none;"></canvas>
+    
+    <!-- OUTPUT: The final destination where our captured image string will be pushed -->
+    <img id="photo" alt="The screen capture will appear here" style="border: 1px solid #ccc; max-width: 100%;" />
 
-        async function startCamera() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { width: 640, height: 480 } 
-                });
-                videoElement.srcObject = stream;
-                startBtn.style.display = 'none'; 
-            } catch (err) {
-                console.error("Error accessing the camera: ", err);
-                alert("Please allow camera access to use the AR tracking feature.");
-            }
-        }
-
-        startBtn.addEventListener('click', startCamera);
-    </script>
+    <!-- LOGIC LINK: We place the script tag at the bottom of the body 
+         so the HTML elements fully load into the DOM before the JS tries 
+         to manipulate them. -->
+    <script src="api.js"></script>       <!-- 1. Backend communication methods -->
+    <script src="camera.js"></script>    <!-- 2. Hardware stream initialization -->
+    <script src="tracking.js"></script>  <!-- 3. Computer vision & spatial mapping -->
+    <script src="renderer.js"></script>  <!-- 4. 3D Model generation & AR display -->
 </body>
 </html>
