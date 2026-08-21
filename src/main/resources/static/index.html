@@ -2,7 +2,7 @@
 ========================================================================
 File: index.html
 Description: The primary UI structure for the Camera App.
-             
+
 Overview:
 This file sets up the DOM (Document Object Model) elements. In web dev, 
 HTML provides the static structural objects (like the video player and 
@@ -16,38 +16,122 @@ and handle user interactions.
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JCP Hackathon - Camera App</title>
+
+    <style>
+        /*
+         * CAMERA VIEWPORT
+         * The wrapper provides the dark frame/border and gives us a reliable
+         * positioning context for the offline placeholder message.
+         */
+        .video-frame {
+            position: relative;
+            width: 640px;
+            height: 480px;
+            max-width: calc(100vw - 32px);
+            margin: 20px auto;
+            overflow: hidden;
+            background: #111;
+            border: 8px solid #222;
+            box-sizing: border-box;
+        }
+
+        /*
+         * The actual video is stretched to fill the camera viewport while
+         * preserving the camera's aspect ratio.
+         */
+        .video-frame video {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: #111;
+        }
+
+        /*
+         * This message sits directly inside the video frame. It is visible
+         * while the camera is offline and is hidden by camera.js once a
+         * stream successfully starts.
+         */
+        #offlineMessage {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+            color: #fff;
+            background: rgba(0, 0, 0, 0.45);
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        #toggleCamBtn,
+        #captureBtn {
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        #captureBtn {
+            margin-left: 10px;
+        }
+
+        #toggleCamBtn.camera-running {
+            background: #8b0000;
+            color: #fff;
+        }
+
+        #photo {
+            border: 1px solid #ccc;
+            max-width: 100%;
+        }
+    </style>
 </head>
+
 <body style="text-align: center; font-family: sans-serif;">
-    
+
     <h1>Hello World! The local server is running.</h1>
     <p>Ready to build the hackathon project.</p>
-    
+
     <h2>Camera & AR Tracking Setup</h2>
-    
-    <!-- VIDEO VIEWPORT: This is where the live feed will be rendered. 
+
+    <!-- VIDEO VIEWPORT: This wrapper creates the larger 640x480 camera frame.
          The 'autoplay' and 'playsinline' attributes ensure the stream 
          starts rendering immediately once the JavaScript connects it. -->
-    <video id="video" autoplay playsinline style="border: 1px solid black; max-width: 100%;"></video>
-    <br><br>
+    <div class="video-frame">
+        <video id="video" autoplay playsinline></video>
 
-    <!-- UI CONTROLS: Standard buttons waiting for JS EventListeners -->
+        <!-- OFFLINE STATUS: This remains centered inside the video frame until
+             camera.js successfully initializes the hardware stream. -->
+        <div id="offlineMessage" aria-live="polite">
+            Camera Offline - Click Start to Initialize
+        </div>
+    </div>
+
+    <!-- UI CONTROLS: A single VCR-style toggle button controls the complete
+         camera lifecycle. The capture button remains independent. -->
     <div>
-        <button id="toggleCamBtn" style="padding: 10px 20px; font-size: 16px; font-weight: bold; cursor: pointer;">
+        <button id="toggleCamBtn" type="button">
             ▶️ Start Camera
         </button>
-        <button id="captureBtn" style="padding: 10px 20px; font-size: 16px; font-weight: bold; cursor: pointer; margin-left: 10px;">
+        <button id="captureBtn" type="button">
             📸 Take Picture
         </button>
     </div>
+
     <br><br>
 
     <!-- MEMORY BUFFER: A common web dev trick. We use a <canvas> element 
          but hide it from the UI (display:none). We use this hidden canvas 
          to grab and process the video frame data in the background. -->
     <canvas id="canvas" style="display:none;"></canvas>
-    
+
     <!-- OUTPUT: The final destination where our captured image string will be pushed -->
-    <img id="photo" alt="The screen capture will appear here" style="border: 1px solid #ccc; max-width: 100%;" />
+    <img id="photo" alt="The screen capture will appear here">
 
     <!-- LOGIC LINK: We place the script tag at the bottom of the body 
          so the HTML elements fully load into the DOM before the JS tries 
