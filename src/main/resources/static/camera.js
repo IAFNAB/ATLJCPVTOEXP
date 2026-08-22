@@ -62,6 +62,7 @@ toggleCamBtn.addEventListener('click', async () => {
             
             // Route the active stream to our HTML <video> element's source object
             video.srcObject = currentStream;
+            window.startTrackingLoop();
             console.log("Video stream assigned to video element.");
             
             // UI Update: Update button text, add active class, and hide the offline placeholder

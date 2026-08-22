@@ -15,7 +15,7 @@ and handle user interactions.
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JCP Hackathon - Camera App</title>
+    <title>JCP Virtual Try On Experience</title>
 
     <style>
         /*
@@ -94,10 +94,10 @@ and handle user interactions.
 
 <body style="text-align: center; font-family: sans-serif;">
 
-    <h1>Hello World! The local server is running.</h1>
-    <p>Ready to build the hackathon project.</p>
+    <h1>JCPenney Virtual Try On Experience</h1>
+    <p>Team: Not a Bug, It's a Feature</p>
 
-    <h2>Camera & AR Tracking Setup</h2>
+    <h2>Camera & AR Tracking Display</h2>
 
     <!-- VIDEO VIEWPORT: This wrapper creates the larger 640x480 camera frame.
          The 'autoplay' and 'playsinline' attributes ensure the stream 
@@ -136,6 +136,10 @@ and handle user interactions.
     <!-- LOGIC LINK: We place the script tag at the bottom of the body 
          so the HTML elements fully load into the DOM before the JS tries 
          to manipulate them. -->
+         <!-- Google MediaPipe ML Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
     <script src="api.js"></script>       <!-- 1. Backend communication methods -->
     <script src="camera.js"></script>    <!-- 2. Hardware stream initialization -->
     <script src="tracking.js"></script>  <!-- 3. Computer vision & spatial mapping -->
