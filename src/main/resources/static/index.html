@@ -136,10 +136,16 @@ and handle user interactions.
     <!-- LOGIC LINK: We place the script tag at the bottom of the body 
          so the HTML elements fully load into the DOM before the JS tries 
          to manipulate them. -->
+
+         <!-- Three.js Engine & GLTF Loader -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+
          <!-- Google MediaPipe ML Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+    
     <script src="api.js"></script>       <!-- 1. Backend communication methods -->
     <script src="camera.js"></script>    <!-- 2. Hardware stream initialization -->
     <script src="tracking.js"></script>  <!-- 3. Computer vision & spatial mapping -->

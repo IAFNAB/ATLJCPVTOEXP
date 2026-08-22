@@ -1,52 +1,72 @@
 /*
-========================================================================
+=========================================================================================
 File: tracking.js
-Description: Google MediaPipe Pose Tracking Integration.
-Overview: Ingests the raw video feed, runs it through the Pose ML model, 
-and logs the spatial coordinates for our virtual try-on assets.
-========================================================================
+Description: Computer Vision & Spatial Tracking Layer (Google MediaPipe)
+Project: JCPenney Virtual Try-On Experience (Hackathon Prototype)
+Team: Not a Bug, It's a Feature
+
+Overview:
+This module ingests the raw HTML5 video feed and processes it through Google's
+MediaPipe Pose ML model. It runs entirely client-side to maintain rapid inference 
+times and strict enterprise privacy standards. The extracted coordinate landmarks 
+(e.g., the nose for hats/glasses, shoulders for purses) are normalized and broadcast 
+to the WebGL renderer.
+=========================================================================================
 */
 
 const videoElement = document.getElementById('video');
 
-// ==========================================
-// 1. Handle the ML Tracking Results
-// ==========================================
+// ============================================================================
+// 1. ML TRACKING PIPELINE (RESULTS HANDLER)
+// ============================================================================
+/**
+ * Callback function triggered every time the Pose model processes a video frame.
+ * @param {Object} results - The output payload from MediaPipe containing spatial landmarks.
+ */
 function onResults(results) {
+    // Guard clause: If the ML model cannot detect a human in the frame,
+    // we instruct the renderer to hide the active 3D model.
     if (!results.poseLandmarks) {
-        return; // No person detected in the frame
+        if (window.hideModel) window.hideModel();
+        return; 
     }
     
-    // Grab the specific body parts we need for our fashion show
-    const nose = results.poseLandmarks[0];       // For the Hat and Glasses
-    const leftShoulder = results.poseLandmarks[11]; // For the Purse
+    // MediaPipe Pose returns an array of 33 3D bodily landmarks.
+    // For hats and glasses, Landmark 0 (the nose) serves as our primary anchor point.
+    // (Note: Landmark 11 or 12 would be used for the left/right shoulder for a purse).
+    const nose = results.poseLandmarks[0];
     
-    // Log the coordinates so we know the AI is seeing us
-    console.log(`Face (Nose) X: ${nose.x.toFixed(2)}, Y: ${nose.y.toFixed(2)}`);
-    console.log(`Shoulder X: ${leftShoulder.x.toFixed(2)}, Y: ${leftShoulder.y.toFixed(2)}`);
-    
-    // In the next phase, renderer.js will use these variables to pin the 3D models to the screen!
+    // Broadcast the normalized X and Y coordinates to our WebGL rendering engine.
+    // The renderer will translate these (0.0 to 1.0) values into 3D virtual coordinates.
+    if (window.updateModelPosition) {
+        window.updateModelPosition(nose.x, nose.y);
+    }
 }
 
-// ==========================================
-// 2. Initialize the MediaPipe Pose Tracker
-// ==========================================
+// ============================================================================
+// 2. MEDIAPIPE POSE TRACKER CONFIGURATION
+// ============================================================================
+// Initialize the Pose tracker and dynamically load the required WASM binaries via CDN.
 const poseTracker = new Pose({locateFile: (file) => {
     return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
 }});
 
+// Configure the AI model parameters for a balance of performance and accuracy.
 poseTracker.setOptions({
-    modelComplexity: 1,
-    smoothLandmarks: true,
-    minDetectionConfidence: 0.5,
-    minTrackingConfidence: 0.5
+    modelComplexity: 1,           // 0=Fastest/Less Accurate, 1=Balanced, 2=Slowest/Highly Accurate
+    smoothLandmarks: true,        // Applies jitter-reduction filters to the spatial data
+    minDetectionConfidence: 0.5,  // Minimum confidence threshold to initially detect a person
+    minTrackingConfidence: 0.5    // Minimum confidence threshold to maintain tracking frame-to-frame
 });
 
+// Bind our custom results handler to the model's output pipeline.
 poseTracker.onResults(onResults);
 
-// ==========================================
-// 3. Connect Video Stream to the Tracker
-// ==========================================
+// ============================================================================
+// 3. HARDWARE STREAM BINDING
+// ============================================================================
+// Utilize the MediaPipe Camera utility to optimize the ingestion of the video stream.
+// This utility automatically feeds raw frames into the ML model at the correct resolution.
 const mlCamera = new Camera(videoElement, {
     onFrame: async () => {
         await poseTracker.send({image: videoElement});
@@ -55,8 +75,14 @@ const mlCamera = new Camera(videoElement, {
     height: 480
 });
 
-// Expose this function so camera.js can trigger it when the video turns on
+// ============================================================================
+// 4. PUBLIC API EXPORTS
+// ============================================================================
+/**
+ * Public Method: startTrackingLoop
+ * Invoked by camera.js immediately after the hardware webcam stream is successfully authorized.
+ */
 window.startTrackingLoop = () => {
-    console.log("Starting ML spatial tracking loop...");
+    console.log("Tracking Layer: Starting MediaPipe ML spatial tracking loop...");
     mlCamera.start();
 };

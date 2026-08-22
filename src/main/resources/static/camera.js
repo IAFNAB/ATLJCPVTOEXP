@@ -48,6 +48,7 @@ toggleCamBtn.addEventListener('click', async () => {
         toggleCamBtn.classList.remove('camera-running');
         offlineMessage.style.display = 'flex';
         
+        if (window.hideModel) window.hideModel(); // Hide the 3D asset
         console.log("Camera stopped successfully.");
     } 
     // If no stream exists, the camera is OFF, so we start it
