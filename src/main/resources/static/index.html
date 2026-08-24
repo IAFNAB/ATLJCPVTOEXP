@@ -68,6 +68,57 @@ and handle user interactions.
             pointer-events: none;
         }
 
+        /*
+         * 3D ASSET LOADING STATUS
+         * Displays while Three.js downloads and initializes
+         * the active AR model.
+         */
+        #assetLoadingMessage {
+
+            position: absolute;
+
+            left: 0;
+            bottom: 10px;
+
+            width: 100%;
+
+            text-align: center;
+
+            color: #00ffd0;
+
+            font-size: 18px;
+            font-weight: bold;
+
+            text-shadow:
+                0 0 5px rgba(0,255,208,0.5),
+                0 0 12px rgba(0,255,208,0.8);
+
+            pointer-events: none;
+
+            z-index: 999;
+
+            animation: pulseFade 1.5s infinite;
+        }
+
+        /*
+         * Subtle pulsing animation indicating
+         * an active background operation.
+         */
+        @keyframes pulseFade {
+
+            0% {
+                opacity: 0.25;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0.25;
+            }
+        }
+
         #toggleCamBtn,
         #captureBtn {
             padding: 10px 20px;
@@ -103,6 +154,7 @@ and handle user interactions.
          The 'autoplay' and 'playsinline' attributes ensure the stream 
          starts rendering immediately once the JavaScript connects it. -->
     <div class="video-frame">
+
         <video id="video" autoplay playsinline></video>
 
         <!-- OFFLINE STATUS: This remains centered inside the video frame until
@@ -110,6 +162,20 @@ and handle user interactions.
         <div id="offlineMessage" aria-live="polite">
             Camera Offline - Click Start to Initialize
         </div>
+
+        <!--
+             3D Asset Loading Indicator
+
+             Visible while Three.js loads and prepares
+             the active AR model.
+
+             renderer.js automatically hides this
+             message after the model finishes loading.
+        -->
+        <div id="assetLoadingMessage">
+            Loading 3D Asset...
+        </div>
+
     </div>
 
     <!-- UI CONTROLS: A single VCR-style toggle button controls the complete
@@ -118,6 +184,7 @@ and handle user interactions.
         <button id="toggleCamBtn" type="button">
             ▶️ Start Camera
         </button>
+
         <button id="captureBtn" type="button">
             📸 Take Picture
         </button>
@@ -137,18 +204,19 @@ and handle user interactions.
          so the HTML elements fully load into the DOM before the JS tries 
          to manipulate them. -->
 
-         <!-- Three.js Engine & GLTF Loader -->
+    <!-- Three.js Engine & GLTF Loader -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 
-         <!-- Google MediaPipe ML Libraries -->
+    <!-- Google MediaPipe ML Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
-    
+
     <script src="api.js"></script>       <!-- 1. Backend communication methods -->
     <script src="camera.js"></script>    <!-- 2. Hardware stream initialization -->
     <script src="tracking.js"></script>  <!-- 3. Computer vision & spatial mapping -->
     <script src="renderer.js"></script>  <!-- 4. 3D Model generation & AR display -->
+
 </body>
 </html>
