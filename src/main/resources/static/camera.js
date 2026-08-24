@@ -20,104 +20,171 @@ const toggleCamBtn = document.getElementById('toggleCamBtn');
 const captureBtn = document.getElementById('captureBtn');
 const offlineMessage = document.getElementById('offlineMessage');
 
-// Global state variable to track the active camera stream 
+// Global state variable to track the active camera stream
 let currentStream = null;
+
+// ==========================================
+// DEBUGGING HELPERS
+// Added to improve troubleshooting across
+// browsers, devices, and QA environments.
+// ==========================================
+function stopCurrentStream() {
+    if (currentStream) {
+        console.log("Cleaning up active camera stream...");
+
+        currentStream.getTracks().forEach(track => {
+            console.log(
+                `Stopping track: ${track.kind} | ReadyState=${track.readyState}`
+            );
+            track.stop();
+        });
+
+        currentStream = null;
+    }
+}
+
+// ==========================================
+// PAGE CLEANUP
+// Ensures camera resources are released if
+// the user refreshes, closes, or leaves page.
+// ==========================================
+window.addEventListener('beforeunload', () => {
+    console.log("Page unloading. Releasing camera resources...");
+    stopCurrentStream();
+});
+
+// ==========================================
+// VISIBILITY DEBUGGING
+// Helps determine if browser tab switching
+// causes camera or tracking issues.
+// ==========================================
+document.addEventListener('visibilitychange', () => {
+    console.log(
+        `Visibility Changed: ${document.visibilityState}`
+    );
+});
 
 // ==========================================
 // 2. Hardware Access & UI Toggle Logic
 // ==========================================
+
 // --- TOGGLE BUTTON LOGIC ---
 toggleCamBtn.addEventListener('click', async () => {
+
     console.log("Toggle camera button clicked.");
 
     // If stream exists, the camera is currently ON, so we stop it
     if (currentStream) {
+
         console.log("Stopping camera...");
-        
-        // To properly turn off the webcam (and kill the hardware light), 
+
+        // To properly turn off the webcam (and kill the hardware light),
         // we must explicitly stop the individual hardware tracks.
-        const tracks = currentStream.getTracks();
-        tracks.forEach(track => track.stop());
-        
+        stopCurrentStream();
+
         // Clear the video element and reset our global state variable
         video.srcObject = null;
-        currentStream = null;
-        
+
         // UI Update: Reset button, remove active class, and show the offline placeholder
         toggleCamBtn.innerHTML = '▶️ Start Camera';
         toggleCamBtn.classList.remove('camera-running');
         offlineMessage.style.display = 'flex';
-        
+
         if (window.hideModel) window.hideModel(); // Hide the 3D asset
+
         console.log("Camera stopped successfully.");
-    } 
+    }
+
     // If no stream exists, the camera is OFF, so we start it
     else {
+
         try {
+
             console.log("Requesting getUserMedia...");
+
+            // DEBUG: List available devices
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+
+                console.log("Detected media devices:");
+
+                devices.forEach(device => {
+                    console.log({
+                        kind: device.kind,
+                        label: device.label || "(label unavailable until permission granted)",
+                        deviceId: device.deviceId
+                    });
+                });
+
+            } catch (deviceErr) {
+
+                console.warn(
+                    "Unable to enumerate media devices.",
+                    deviceErr
+                );
+            }
+
             // We use async/await because requesting hardware access takes an unknown amount of time.
             // This prompts the OS/browser permission pop-up for the webcam.
-            currentStream = await navigator.mediaDevices.getUserMedia({ video: true });
-            
+            currentStream = await navigator.mediaDevices.getUserMedia({
+                video: true
+            });
+
             console.log("Stream successfully acquired.");
-            
+
+            const tracks = currentStream.getTracks();
+
+            tracks.forEach(track => {
+                console.log(
+                    `Camera Track Acquired:
+                    Kind=${track.kind}
+                    Label=${track.label}
+                    ReadyState=${track.readyState}`
+                );
+            });
+
             // Route the active stream to our HTML <video> element's source object
             video.srcObject = currentStream;
-            window.startTrackingLoop();
+
+            // IMPORTANT:
+            // Wait until the browser fully initializes the video stream
+            // before starting MediaPipe tracking.
+            video.onloadedmetadata = () => {
+
+                console.log("Video metadata loaded.");
+                console.log(
+                    `Resolution: ${video.videoWidth} x ${video.videoHeight}`
+                );
+
+                if (window.startTrackingLoop) {
+
+                    console.log(
+                        "Starting MediaPipe tracking loop..."
+                    );
+
+                    window.startTrackingLoop();
+                } else {
+
+                    console.warn(
+                        "startTrackingLoop() was not found."
+                    );
+                }
+            };
+
             console.log("Video stream assigned to video element.");
-            
+
             // UI Update: Update button text, add active class, and hide the offline placeholder
             toggleCamBtn.innerHTML = '⏹ Stop Camera';
             toggleCamBtn.classList.add('camera-running');
             offlineMessage.style.display = 'none';
-            
-        } catch (err) {
+
+        }
+
+        catch (err) {
+
             // This catches scenarios where the user clicks "Block" on the permission prompt
             // or if the device simply does not have a webcam.
-            console.error("Hardware access denied, unavailable, or failed: ", err);
-            
-            // Clean up any partially initialized stream
-            if (currentStream) {
-                const tracks = currentStream.getTracks();
-                tracks.forEach(track => track.stop());
-            }
-            
-            // Reset state and UI just to be safe
-            currentStream = null;
-            video.srcObject = null;
-            toggleCamBtn.innerHTML = '▶️ Start Camera';
-            toggleCamBtn.classList.remove('camera-running');
-            offlineMessage.style.display = 'flex';
-            
-            alert("Could not access the camera. Check browser permissions.");
-        }
-    }
-});
 
-// ==========================================
-// 3. Image Capture Logic
-// ==========================================
-captureBtn.addEventListener('click', () => {
-    // Guard clause: Prevent errors if the user clicks capture while the camera is off
-    if (!currentStream) {
-        alert("Please start the camera before capturing an image.");
-        return; 
-    }
+            console.error("Hardware access denied, unavailable, or failed.");
 
-    // Initialize the 2D rendering context on our hidden canvas buffer
-    const context = canvas.getContext('2d');
-    
-    // Dynamically match the canvas resolution to whatever the current webcam resolution is
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    
-    // The core capture method: "draw" the exact current video frame onto the canvas
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
-    // Convert the drawn canvas data into a base64 encoded PNG string.
-    // This string is what we will eventually send to the Java backend via api.js.
-    const imageDataUrl = canvas.toDataURL('image/png');
-    
-    // Inject the base64 string directly into the HTML <img> tag to display the static photo
-    photo.setAttribute('src', imageDataUrl);
-});
+            console.error("Error Name:", err.name);
