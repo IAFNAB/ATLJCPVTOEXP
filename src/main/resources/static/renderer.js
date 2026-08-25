@@ -167,7 +167,7 @@ const MODEL_CONFIGS = {
     },
 
     "heartnecklace.glb": {
-        scale: 0.5
+        scale: 500
     },
 
     "female_beach_hat.glb": {
