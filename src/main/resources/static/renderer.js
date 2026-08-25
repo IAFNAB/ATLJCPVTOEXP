@@ -162,12 +162,12 @@ const MODEL_CONFIGS = {
         scale: 0.6
     },
 
-    "hokage_hat.glb": {
-        scale: 0.6
+    "raybanglasses.glb": {
+        scale: 0.4
     },
 
-    "pokemon_hat.glb": {
-        scale: 0.6
+    "heartnecklace.glb": {
+        scale: 0.5
     },
 
     "female_beach_hat.glb": {
