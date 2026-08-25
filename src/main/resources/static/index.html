@@ -1,14 +1,14 @@
-<!-- 
+<!--
 ========================================================================
 File: index.html
 Description: The primary UI structure for the Camera App.
 
 Overview:
-This file sets up the DOM (Document Object Model) elements. In web dev, 
-HTML provides the static structural objects (like the video player and 
-buttons), and we link our JavaScript file at the end to inject the logic 
+This file sets up the DOM (Document Object Model) elements. In web dev,
+HTML provides the static structural objects (like the video player and
+buttons), and we link our JavaScript file at the end to inject the logic
 and handle user interactions.
-======================================================================== 
+========================================================================
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -18,6 +18,29 @@ and handle user interactions.
     <title>JCP Virtual Try On Experience</title>
 
     <style>
+
+        /*
+         * PAGE LAYOUT
+         * Creates space for the AR viewport and the
+         * product selector panel.
+         */
+        .main-layout {
+
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 80px;
+
+            margin-top: 20px;
+        }
+
+        .experience-column {
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
         /*
          * CAMERA VIEWPORT
          * The wrapper provides the dark frame/border and gives us a reliable
@@ -140,6 +163,97 @@ and handle user interactions.
             border: 1px solid #ccc;
             max-width: 100%;
         }
+
+        /*
+         * ==========================================
+         * PRODUCT SELECTOR PANEL
+         * ==========================================
+         */
+
+        #assetPanel {
+
+            width: 240px;
+
+            background: white;
+
+            border-radius: 12px;
+
+            padding: 15px;
+
+            box-shadow:
+                0 4px 12px rgba(0,0,0,0.15);
+
+            text-align: center;
+        }
+
+        #assetPanel h3 {
+
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        /*
+         * Preview canvas container.
+         * renderer.js will render a rotating
+         * GLB preview into this area.
+         */
+
+        #previewContainer {
+
+            width: 200px;
+            height: 200px;
+
+            margin: auto;
+            margin-bottom: 20px;
+
+            border: 1px solid #ddd;
+            border-radius: 10px;
+
+            overflow: hidden;
+
+            background: #fafafa;
+        }
+
+        #previewCanvas {
+
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /*
+         * Individual model selection cards.
+         */
+
+        .asset-card {
+
+            background: #f4f4f4;
+
+            padding: 12px;
+
+            margin-bottom: 10px;
+
+            border-radius: 8px;
+
+            cursor: pointer;
+
+            font-weight: bold;
+
+            transition: all 0.2s ease;
+        }
+
+        .asset-card:hover {
+
+            background: #e4e4e4;
+            transform: scale(1.03);
+        }
+
+        .asset-card.active {
+
+            background: #0078d4;
+            color: white;
+        }
+
     </style>
 </head>
 
@@ -150,58 +264,105 @@ and handle user interactions.
 
     <h2>Camera & AR Tracking Display</h2>
 
-    <!-- VIDEO VIEWPORT: This wrapper creates the larger 640x480 camera frame.
-         The 'autoplay' and 'playsinline' attributes ensure the stream 
-         starts rendering immediately once the JavaScript connects it. -->
-    <div class="video-frame">
+    <div class="main-layout">
 
-        <video id="video" autoplay playsinline></video>
+        <div class="experience-column">
 
-        <!-- OFFLINE STATUS: This remains centered inside the video frame until
-             camera.js successfully initializes the hardware stream. -->
-        <div id="offlineMessage" aria-live="polite">
-            Camera Offline - Click Start to Initialize
+            <!-- VIDEO VIEWPORT: This wrapper creates the larger 640x480 camera frame.
+                 The 'autoplay' and 'playsinline' attributes ensure the stream
+                 starts rendering immediately once the JavaScript connects it. -->
+            <div class="video-frame">
+
+                <video id="video" autoplay playsinline></video>
+
+                <!-- OFFLINE STATUS: This remains centered inside the video frame until
+                     camera.js successfully initializes the hardware stream. -->
+                <div id="offlineMessage" aria-live="polite">
+                    Camera Offline - Click Start to Initialize
+                </div>
+
+                <!--
+                     3D Asset Loading Indicator
+
+                     Visible while Three.js loads and prepares
+                     the active AR model.
+
+                     renderer.js automatically hides this
+                     message after the model finishes loading.
+                -->
+                <div id="assetLoadingMessage">
+                    Loading 3D Asset...
+                </div>
+
+            </div>
+
+            <!-- UI CONTROLS: A single VCR-style toggle button controls the complete
+                 camera lifecycle. The capture button remains independent. -->
+            <div>
+                <button id="toggleCamBtn" type="button">
+                    ▶️ Start Camera
+                </button>
+
+                <button id="captureBtn" type="button">
+                    📸 Take Picture
+                </button>
+            </div>
+
         </div>
 
         <!--
-             3D Asset Loading Indicator
+             PRODUCT SELECTION PANEL
 
-             Visible while Three.js loads and prepares
-             the active AR model.
+             Allows users to switch between available
+             virtual try-on assets.
 
-             renderer.js automatically hides this
-             message after the model finishes loading.
+             Preview canvas will display a rotating
+             GLB model rendered by Three.js.
         -->
-        <div id="assetLoadingMessage">
-            Loading 3D Asset...
+        <div id="assetPanel">
+
+            <h3>Available Items</h3>
+
+            <div id="previewContainer">
+                <canvas id="previewCanvas"></canvas>
+            </div>
+
+            <div class="asset-card active"
+                 data-model="top_hat.glb">
+                Top Hat
+            </div>
+
+            <div class="asset-card"
+                 data-model="hokage_hat.glb">
+                Hokage Hat
+            </div>
+
+            <div class="asset-card"
+                 data-model="pokemon_hat.glb">
+                Pokemon Hat
+            </div>
+
+            <div class="asset-card"
+                 data-model="female_beach_hat.glb">
+                Beach Hat
+            </div>
+
         </div>
 
-    </div>
-
-    <!-- UI CONTROLS: A single VCR-style toggle button controls the complete
-         camera lifecycle. The capture button remains independent. -->
-    <div>
-        <button id="toggleCamBtn" type="button">
-            ▶️ Start Camera
-        </button>
-
-        <button id="captureBtn" type="button">
-            📸 Take Picture
-        </button>
     </div>
 
     <br><br>
 
-    <!-- MEMORY BUFFER: A common web dev trick. We use a <canvas> element 
-         but hide it from the UI (display:none). We use this hidden canvas 
+    <!-- MEMORY BUFFER: A common web dev trick. We use a <canvas> element
+         but hide it from the UI (display:none). We use this hidden canvas
          to grab and process the video frame data in the background. -->
     <canvas id="canvas" style="display:none;"></canvas>
 
     <!-- OUTPUT: The final destination where our captured image string will be pushed -->
     <img id="photo" alt="The screen capture will appear here">
 
-    <!-- LOGIC LINK: We place the script tag at the bottom of the body 
-         so the HTML elements fully load into the DOM before the JS tries 
+    <!-- LOGIC LINK: We place the script tag at the bottom of the body
+         so the HTML elements fully load into the DOM before the JS tries
          to manipulate them. -->
 
     <!-- Three.js Engine & GLTF Loader -->
