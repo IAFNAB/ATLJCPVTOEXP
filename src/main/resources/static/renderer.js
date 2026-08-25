@@ -265,7 +265,7 @@ window.updateModelPosition = (x, y) => {
         planeHeight;
 
     // Vertical offset placing the hat above the nose anchor.
-    currentModel.position.y += 1.5;
+    currentModel.position.y += 1.0;
 };
 
 /**
