@@ -194,8 +194,19 @@ scene.add(
 // Creates an invisible 3D sphere that writes to the depth buffer but not the color buffer,
 // effectively blocking objects rendered behind it to simulate 3D wrapping around the user's head.
 const headGeometry = new THREE.SphereGeometry(0.6, 32, 32); 
-const occlusionMaterial = new THREE.MeshBasicMaterial({ colorWrite: false });
-const headOccluder = new THREE.Mesh(headGeometry, occlusionMaterial);
+const invisibleOcclusionMaterial =
+    new THREE.MeshBasicMaterial({
+        colorWrite: false
+    });
+
+const visibleOcclusionMaterial =
+    new THREE.MeshNormalMaterial({
+        transparent: true,
+        opacity: 0.4
+    });
+
+const occlusionMaterial =
+    invisibleOcclusionMaterial;const headOccluder = new THREE.Mesh(headGeometry, occlusionMaterial);
 scene.add(headOccluder);
 
 // ============================================================================
@@ -668,6 +679,11 @@ function animate() {
         previewModel.rotation.y += 0.01;
 
     }
+    
+    headOccluder.material =
+    debugSettings.showOccluder
+        ? visibleOcclusionMaterial
+        : invisibleOcclusionMaterial;
 
     renderer.render(
         scene,
