@@ -123,6 +123,17 @@ scene.add(
 );
 
 // ============================================================================
+// 3.5 OCCLUSION SETUP (INVISIBLE HEAD)
+// ============================================================================
+
+// Creates an invisible 3D sphere that writes to the depth buffer but not the color buffer,
+// effectively blocking objects rendered behind it to simulate 3D wrapping around the user's head.
+const headGeometry = new THREE.SphereGeometry(0.6, 32, 32); 
+const occlusionMaterial = new THREE.MeshBasicMaterial({ colorWrite: false });
+const headOccluder = new THREE.Mesh(headGeometry, occlusionMaterial);
+scene.add(headOccluder);
+
+// ============================================================================
 // 4. ASSET LOADING AND INITIALIZATION
 // ============================================================================
 
@@ -431,9 +442,12 @@ const planeWidth =
  *
  * @param {number} y
  * Normalized Y position (0.0 to 1.0)
+ *
+ * @param {number} roll
+ * Calculated Z-axis rotation angle (Head Tilt)
  */
 
-window.updateModelPosition = (x, y) => {
+window.updateModelPosition = (x, y, roll) => {
 
     // Ensure asset is fully loaded before performing updates.
 
@@ -486,6 +500,17 @@ window.updateModelPosition = (x, y) => {
     // Vertical offset placing the hat above the nose anchor.
 
     currentModel.position.y += 1.0;
+    
+    // Apply the Z-axis rotation (Tilt)
+    if (roll !== undefined) {
+        currentModel.rotation.z = -roll; 
+    }
+    
+    // Sync the invisible head with the active asset's position
+    headOccluder.position.copy(currentModel.position);
+    
+    // Shift the invisible head slightly down so it sits under the hat brim
+    headOccluder.position.y -= 0.8;
 
 };
 
