@@ -404,6 +404,7 @@ previewScene.add(
 );
 
 let previewModel;
+let previewLoadId = 0;
 
 // ============================================================================
 // 4D. PREVIEW MODEL LOADER
@@ -417,12 +418,18 @@ let previewModel;
 
 function loadPreviewModel(modelFile) {
 
+    previewLoadId++;
+
+    const loadId =
+        previewLoadId;
+
     if (previewModel) {
 
         previewScene.remove(
             previewModel
         );
 
+        previewModel = null;
     }
 
     loader.load(
@@ -430,6 +437,10 @@ function loadPreviewModel(modelFile) {
         `models/${modelFile}`,
 
         function (gltf) {
+
+            if (loadId !== previewLoadId) {
+                return;
+            }
 
             previewModel =
                 gltf.scene;
@@ -447,7 +458,6 @@ function loadPreviewModel(modelFile) {
             previewScene.add(
                 previewModel
             );
-
         },
 
         undefined,
@@ -458,11 +468,8 @@ function loadPreviewModel(modelFile) {
                 "Preview Load Error:",
                 error
             );
-
         }
-
     );
-
 }
 
 // Begin timing asset initialization.
