@@ -209,6 +209,26 @@ const occlusionMaterial =
     invisibleOcclusionMaterial;const headOccluder = new THREE.Mesh(headGeometry, occlusionMaterial);
 scene.add(headOccluder);
 
+const anchorDebugSphere =
+    new THREE.Mesh(
+
+        new THREE.SphereGeometry(
+            0.08,
+            16,
+            16
+        ),
+
+        new THREE.MeshBasicMaterial({
+            color: 0x00ff00
+        })
+    );
+
+anchorDebugSphere.visible = false;
+
+scene.add(
+    anchorDebugSphere
+);
+
 // ============================================================================
 // 4. ASSET LOADING AND INITIALIZATION
 // ============================================================================
@@ -591,6 +611,10 @@ window.updateModelPosition = (x, y, roll) => {
     
     // Sync the invisible head with the active asset's position
     headOccluder.position.copy(currentModel.position);
+
+    anchorDebugSphere.position.copy(
+    currentModel.position
+);
     
     // Shift the invisible head slightly down so it sits under the hat brim
     headOccluder.position.y -= 0.8;
@@ -691,6 +715,9 @@ function animate() {
     debugSettings.showOccluder
         ? visibleOcclusionMaterial
         : invisibleOcclusionMaterial;
+    
+    anchorDebugSphere.visible =
+    debugSettings.showAnchor;
 
     renderer.render(
         scene,
