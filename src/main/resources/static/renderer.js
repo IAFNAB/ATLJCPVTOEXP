@@ -33,6 +33,71 @@ measure asset load performance during model initialization.
 // The Scene is the 3D virtual environment where our models and lights exist.
 const scene = new THREE.Scene();
 
+// ============================================================================
+// DEVELOPER TOOLS (PHASE 1)
+// ============================================================================
+
+let developerGui;
+
+const debugSettings = {
+    showOccluder: false,
+    showLandmarks: false,
+    showAnchor: false
+};
+
+function initializeDeveloperTools() {
+
+    developerGui = new lil.GUI({
+        title: "JCP AR Developer Tools"
+    });
+
+    const debugFolder =
+        developerGui.addFolder("Debug");
+
+    debugFolder.add(
+        debugSettings,
+        "showOccluder"
+    );
+
+    debugFolder.add(
+        debugSettings,
+        "showLandmarks"
+    );
+
+    debugFolder.add(
+        debugSettings,
+        "showAnchor"
+    );
+
+    developerGui.hide();
+
+    document.addEventListener(
+        "keydown",
+        (event) => {
+
+            if (
+                event.ctrlKey &&
+                event.key.toLowerCase() === "h"
+            ) {
+
+                const hidden =
+                    developerGui.domElement.style.display === "none";
+
+                if (hidden) {
+                    developerGui.show();
+                }
+                else {
+                    developerGui.hide();
+                }
+            }
+        }
+    );
+
+    console.log(
+        "Developer Tools Initialized. Press Ctrl+H."
+    );
+}
+
 // The PerspectiveCamera simulates a standard human eye view.
 //
 // Parameters:
@@ -619,3 +684,5 @@ function animate() {
 // Kick off the render pipeline.
 
 animate();
+
+initializeDeveloperTools();
