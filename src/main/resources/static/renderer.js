@@ -77,7 +77,7 @@ function initializeDeveloperTools() {
 
             if (
                 event.ctrlKey &&
-                event.key.toLowerCase() === "h"
+                event.key.toLowerCase() === "x"
             ) {
 
                 const hidden =
