@@ -25,15 +25,6 @@ measure asset load performance during model initialization.
 =========================================================================================
 */
 
-// ============================================================================
-// 0. LIL-GUI INITIALIZATION
-// ============================================================================
-
-const guiScript = document.createElement("script");
-guiScript.src =
-    "https://cdn.jsdelivr.net/npm/lil-gui@0.19/dist/lil-gui.umd.min.js";
-
-document.head.appendChild(guiScript);
 
 // ============================================================================
 // 1. SCENE AND CAMERA CONFIGURATION
@@ -262,10 +253,6 @@ const guiState = {
 
 function initializeGUI() {
 
-    if (!window.lil) {
-        setTimeout(initializeGUI, 250);
-        return;
-    }
 
     const gui = new lil.GUI({
         title: "JCP AR Developer Tools"
