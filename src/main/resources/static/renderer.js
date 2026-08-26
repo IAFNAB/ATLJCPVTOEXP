@@ -1,6 +1,7 @@
 /*
 =========================================================================================
 File: renderer.js
+
 Description:
 Three.js 3D Rendering Engine & Spatial Tracking Layer
 
@@ -25,12 +26,21 @@ measure asset load performance during model initialization.
 =========================================================================================
 */
 
-
 // ============================================================================
 // 1. SCENE AND CAMERA CONFIGURATION
 // ============================================================================
 
+// The Scene is the 3D virtual environment where our models and lights exist.
 const scene = new THREE.Scene();
+
+// The PerspectiveCamera simulates a standard human eye view.
+//
+// Parameters:
+//
+// Field of View (45 deg)
+// Aspect Ratio (640/480)
+// Near Plane (0.1)
+// Far Plane (1000)
 
 const camera = new THREE.PerspectiveCamera(
     45,
@@ -39,11 +49,16 @@ const camera = new THREE.PerspectiveCamera(
     1000
 );
 
+// Move the camera backward so loaded assets sit inside view.
 camera.position.z = 5;
 
 // ============================================================================
 // 2. WEBGL RENDERER INITIALIZATION
 // ============================================================================
+
+// alpha:true allows the camera feed to remain visible behind the 3D layer.
+//
+// antialias:true smooths jagged polygon edges.
 
 const renderer = new THREE.WebGLRenderer({
     alpha: true,
@@ -55,18 +70,29 @@ renderer.setSize(
     480
 );
 
-renderer.domElement.style.position = "absolute";
-renderer.domElement.style.top = "0";
-renderer.domElement.style.left = "0";
-renderer.domElement.style.pointerEvents = "none";
+// Style the generated canvas so it perfectly overlays the video stream.
+
+renderer.domElement.style.position = 'absolute';
+renderer.domElement.style.top = '0';
+renderer.domElement.style.left = '0';
+
+// Prevent the Three.js layer from blocking UI interactions.
+
+renderer.domElement.style.pointerEvents = 'none';
+
+// Inject the WebGL canvas into the video frame container.
 
 document
-    .querySelector(".video-frame")
+    .querySelector('.video-frame')
     .appendChild(renderer.domElement);
 
 // ============================================================================
 // 3. SCENE LIGHTING
 // ============================================================================
+
+// AmbientLight provides consistent illumination across the scene.
+//
+// Elevated intensity helps dark merchandise remain visible.
 
 const ambientLight =
     new THREE.AmbientLight(
@@ -77,6 +103,8 @@ const ambientLight =
 scene.add(
     ambientLight
 );
+
+// DirectionalLight simulates sunlight and improves depth perception.
 
 const directionalLight =
     new THREE.DirectionalLight(
@@ -98,42 +126,33 @@ scene.add(
 // 3.5 OCCLUSION SETUP (INVISIBLE HEAD)
 // ============================================================================
 
-let headGeometry =
-    new THREE.SphereGeometry(
-        0.6,
-        32,
-        32
-    );
-
-const occlusionMaterial =
-    new THREE.MeshBasicMaterial({
-        colorWrite: false
-    });
-
-const headOccluder =
-    new THREE.Mesh(
-        headGeometry,
-        occlusionMaterial
-    );
-
-scene.add(
-    headOccluder
-);
+// Creates an invisible 3D sphere that writes to the depth buffer but not the color buffer,
+// effectively blocking objects rendered behind it to simulate 3D wrapping around the user's head.
+const headGeometry = new THREE.SphereGeometry(0.6, 32, 32); 
+const occlusionMaterial = new THREE.MeshBasicMaterial({ colorWrite: false });
+const headOccluder = new THREE.Mesh(headGeometry, occlusionMaterial);
+scene.add(headOccluder);
 
 // ============================================================================
 // 4. ASSET LOADING AND INITIALIZATION
 // ============================================================================
 
+// Global reference to the currently active AR model.
+
 let currentModel;
-let currentModelFile = "top_hat.glb";
+
+// Used to prevent console spam once tracking begins.
+
 let firstPoseDetected = false;
 
-let latestTrackingData = null;
+// Reference to the HTML loading indicator.
 
 const assetLoadingMessage =
     document.getElementById(
-        "assetLoadingMessage"
+        'assetLoadingMessage'
     );
+
+// GLTF model loader.
 
 const loader =
     new THREE.GLTFLoader();
@@ -142,290 +161,133 @@ const loader =
 // 4A. MODEL CONFIGURATION
 // ============================================================================
 
+// Future-proof container.
+//
+// As additional assets are tuned,
+// scales and offsets can be configured
+// individually.
+
 const MODEL_CONFIGS = {
 
     "top_hat.glb": {
-        scale: 0.6,
-        offsetX: 0,
-        offsetY: 1.0,
-        offsetZ: 0,
-        rotationX: 0,
-        rotationY: 0,
-        rotationZ: 0,
-        occluderRadius: 0.6,
-        occluderOffsetY: -0.8,
-        occluderOffsetZ: 0,
-        anchorPoint: "nose"
+        scale: 0.6
     },
 
     "raybanglasses.glb": {
-        scale: 0.4,
-        offsetX: 0,
-        offsetY: 0,
-        offsetZ: 0,
-        rotationX: 0,
-        rotationY: 0,
-        rotationZ: 0,
-        occluderRadius: 0.55,
-        occluderOffsetY: -0.2,
-        occluderOffsetZ: 0,
-        anchorPoint: "nose"
+        scale: 0.4
     },
 
     "heartnecklace.glb": {
-        scale: 7,
-        offsetX: 0,
-        offsetY: -0.5,
-        offsetZ: 0,
-        rotationX: 0,
-        rotationY: 0,
-        rotationZ: 0,
-        occluderRadius: 0.7,
-        occluderOffsetY: -0.8,
-        occluderOffsetZ: 0,
-        anchorPoint: "chest"
+        scale: 7
     },
 
     "female_beach_hat.glb": {
-        scale: 0.6,
-        offsetX: 0,
-        offsetY: 1.0,
-        offsetZ: 0,
-        rotationX: 0,
-        rotationY: 0,
-        rotationZ: 0,
-        occluderRadius: 0.6,
-        occluderOffsetY: -0.8,
-        occluderOffsetZ: 0,
-        anchorPoint: "nose"
+        scale: 0.6
     }
+
 };
 
 // ============================================================================
-// 4B. GUI STATE
+// 4B. PRIMARY AR MODEL LOADER
 // ============================================================================
 
-const guiState = {
-    scale: 1,
-    offsetX: 0,
-    offsetY: 1,
-    offsetZ: 0,
-    rotationX: 0,
-    rotationY: 0,
-    rotationZ: 0,
-
-    showOccluder: false,
-    occluderRadius: 0.6,
-    occluderOffsetY: -0.8,
-    occluderOffsetZ: 0,
-
-    anchorPoint: "nose",
-
-    ambientIntensity: 2.5,
-    directionalIntensity: 1.5,
-
-    logConfig() {
-
-        const output = {
-            scale: guiState.scale,
-            offsetX: guiState.offsetX,
-            offsetY: guiState.offsetY,
-            offsetZ: guiState.offsetZ,
-            rotationX: guiState.rotationX,
-            rotationY: guiState.rotationY,
-            rotationZ: guiState.rotationZ,
-            occluderRadius: guiState.occluderRadius,
-            occluderOffsetY: guiState.occluderOffsetY,
-            occluderOffsetZ: guiState.occluderOffsetZ,
-            anchorPoint: guiState.anchorPoint
-        };
-
-        console.log(
-            `"${currentModelFile}":`,
-            output
-        );
-    }
-};
-
-// ============================================================================
-// 4C. GUI INITIALIZATION
-// ============================================================================
-
-function initializeGUI() {
-
-
-    const gui = new lil.GUI({
-        title: "JCP AR Developer Tools"
-    });
-
-    gui.hide();
-
-    document.addEventListener(
-        "keydown",
-        (event) => {
-
-            if (
-                event.ctrlKey &&
-                event.key.toLowerCase() === "h"
-            ) {
-
-                const hidden =
-                    gui.domElement.style.display === "none";
-
-                if (hidden) {
-                    gui.show();
-                } else {
-                    gui.hide();
-                }
-            }
-        }
-    );
-
-    const transformFolder =
-        gui.addFolder("Transform");
-
-    transformFolder.add(guiState, "scale", 0.01, 10, 0.01);
-    transformFolder.add(guiState, "offsetX", -5, 5, 0.01);
-    transformFolder.add(guiState, "offsetY", -5, 5, 0.01);
-    transformFolder.add(guiState, "offsetZ", -5, 5, 0.01);
-
-    transformFolder.add(guiState, "rotationX", -Math.PI, Math.PI, 0.01);
-    transformFolder.add(guiState, "rotationY", -Math.PI, Math.PI, 0.01);
-    transformFolder.add(guiState, "rotationZ", -Math.PI, Math.PI, 0.01);
-
-    const occlusionFolder =
-        gui.addFolder("Occlusion");
-
-    occlusionFolder.add(guiState, "showOccluder");
-
-    occlusionFolder.add(
-        guiState,
-        "occluderRadius",
-        0.1,
-        3,
-        0.01
-    );
-
-    occlusionFolder.add(
-        guiState,
-        "occluderOffsetY",
-        -5,
-        5,
-        0.01
-    );
-
-    occlusionFolder.add(
-        guiState,
-        "occluderOffsetZ",
-        -5,
-        5,
-        0.01
-    );
-
-    const trackingFolder =
-        gui.addFolder("Tracking");
-
-    trackingFolder.add(
-        guiState,
-        "anchorPoint",
-        ["nose", "chest"]
-    );
-
-    const lightingFolder =
-        gui.addFolder("Lighting");
-
-    lightingFolder.add(
-        guiState,
-        "ambientIntensity",
-        0,
-        10,
-        0.01
-    );
-
-    lightingFolder.add(
-        guiState,
-        "directionalIntensity",
-        0,
-        10,
-        0.01
-    );
-
-    gui.add(
-        guiState,
-        "logConfig"
-    );
-}
-
-initializeGUI();
-
-// ============================================================================
-// 4D. MODEL LOADING
-// ============================================================================
+/**
+ * Loads a selected asset
+ * into the live AR scene.
+ *
+ * @param {string} modelFile
+ */
 
 function loadARModel(modelFile) {
 
-    currentModelFile = modelFile;
-
     if (assetLoadingMessage) {
+
         assetLoadingMessage.style.display =
             "block";
+
     }
 
     if (currentModel) {
-        scene.remove(currentModel);
+
+        scene.remove(
+            currentModel
+        );
+
     }
 
     loader.load(
+
         `models/${modelFile}`,
+
         function (gltf) {
+
+            console.log(
+                `Renderer: ${modelFile} loaded successfully.`
+            );
 
             currentModel =
                 gltf.scene;
 
+            const config =
+                MODEL_CONFIGS[modelFile] ||
+                { scale: 0.6 };
+
+            currentModel.scale.set(
+                config.scale,
+                config.scale,
+                config.scale
+            );
+
+            // Remain hidden until MediaPipe tracking acquires a face.
+
             currentModel.visible = false;
+
+            // Register the model within the scene graph.
 
             scene.add(
                 currentModel
             );
 
-            const config =
-                MODEL_CONFIGS[modelFile];
-
-            if (config) {
-
-                guiState.scale = config.scale;
-                guiState.offsetX = config.offsetX;
-                guiState.offsetY = config.offsetY;
-                guiState.offsetZ = config.offsetZ;
-
-                guiState.rotationX = config.rotationX;
-                guiState.rotationY = config.rotationY;
-                guiState.rotationZ = config.rotationZ;
-
-                guiState.occluderRadius =
-                    config.occluderRadius;
-
-                guiState.occluderOffsetY =
-                    config.occluderOffsetY;
-
-                guiState.occluderOffsetZ =
-                    config.occluderOffsetZ;
-
-                guiState.anchorPoint =
-                    config.anchorPoint;
-            }
-
             if (assetLoadingMessage) {
+
                 assetLoadingMessage.style.display =
                     "none";
+
             }
+
+        },
+
+        undefined,
+
+        function (error) {
+
+            console.error(
+                "Renderer Error: Failed to load the 3D model.",
+                error
+            );
+
+            if (assetLoadingMessage) {
+
+                assetLoadingMessage.innerText =
+                    "Asset Load Failed";
+
+                assetLoadingMessage.style.color =
+                    "#ff4444";
+
+            }
+
         }
+
     );
+
 }
 
 // ============================================================================
-// 4E. PREVIEW WINDOW INITIALIZATION
+// 4C. PREVIEW WINDOW INITIALIZATION
 // ============================================================================
+
+// Separate scene used for the
+// rotating product preview.
 
 const previewScene =
     new THREE.Scene();
@@ -455,47 +317,106 @@ previewRenderer.setSize(
     200
 );
 
-previewScene.add(
+const previewAmbientLight =
     new THREE.AmbientLight(
         0xffffff,
         3
-    )
+    );
+
+previewScene.add(
+    previewAmbientLight
 );
 
 let previewModel;
 
+// ============================================================================
+// 4D. PREVIEW MODEL LOADER
+// ============================================================================
+
+/**
+ * Loads the rotating model preview.
+ *
+ * @param {string} modelFile
+ */
+
 function loadPreviewModel(modelFile) {
 
     if (previewModel) {
-        previewScene.remove(previewModel);
+
+        previewScene.remove(
+            previewModel
+        );
+
     }
 
     loader.load(
+
         `models/${modelFile}`,
+
         function (gltf) {
 
             previewModel =
                 gltf.scene;
 
+            const config =
+                MODEL_CONFIGS[modelFile] ||
+                { scale: 0.6 };
+
             previewModel.scale.set(
-                0.6,
-                0.6,
-                0.6
+                config.scale,
+                config.scale,
+                config.scale
             );
 
             previewScene.add(
                 previewModel
             );
+
+        },
+
+        undefined,
+
+        function (error) {
+
+            console.error(
+                "Preview Load Error:",
+                error
+            );
+
         }
+
     );
+
 }
 
-loadARModel("top_hat.glb");
-loadPreviewModel("top_hat.glb");
+// Begin timing asset initialization.
+
+console.time(
+    "TopHatLoad"
+);
+
+// Default startup asset.
+
+loadARModel(
+    "top_hat.glb"
+);
+
+loadPreviewModel(
+    "top_hat.glb"
+);
+
+console.timeEnd(
+    "TopHatLoad"
+);
 
 // ============================================================================
-// 5. SPATIAL TRACKING
+// 5. SPATIAL TRACKING MAPPING (2D TO 3D CONVERSION)
 // ============================================================================
+
+// Calculate the dimensions of the visible render plane.
+//
+// These values allow conversion of MediaPipe's
+// normalized coordinates into Three.js coordinates.
 
 const vFov =
     camera.fov * Math.PI / 180;
@@ -509,18 +430,40 @@ const planeWidth =
     planeHeight *
     camera.aspect;
 
-// ============================================================================
-// 5A. TRACKING UPDATE API
-// ============================================================================
+/**
+ * Public Method:
+ * updateModelPosition
+ *
+ * Invoked by tracking.js whenever MediaPipe Pose
+ * successfully detects facial landmarks.
+ *
+ * @param {number} x
+ * Normalized X position (0.0 to 1.0)
+ *
+ * @param {number} y
+ * Normalized Y position (0.0 to 1.0)
+ *
+ * @param {number} roll
+ * Calculated Z-axis rotation angle (Head Tilt)
+ */
 
-window.updateModelPosition = (trackingData) => {
+window.updateModelPosition = (x, y, roll) => {
 
-    latestTrackingData =
-        trackingData;
+    // Ensure asset is fully loaded before performing updates.
 
     if (!currentModel) {
+
         return;
+
     }
+
+    // First successful track event.
+    //
+    // Useful QA checkpoint:
+    //
+    // Camera Working?
+    // Tracking Working?
+    // Model Ready?
 
     if (!firstPoseDetected) {
 
@@ -528,121 +471,51 @@ window.updateModelPosition = (trackingData) => {
             "Renderer: First pose detection received."
         );
 
+        console.log(
+            `Tracking Coordinates: x=${x}, y=${y}`
+        );
+
         firstPoseDetected = true;
+
     }
 
+    // Asset becomes visible once tracking data exists.
+
     currentModel.visible = true;
+
+    // Convert normalized MediaPipe X coordinate
+    // into Three.js scene space.
+
+    currentModel.position.x =
+        (x - 0.5) *
+        planeWidth;
+
+    // Browser and WebGL coordinate systems
+    // use opposite Y directions.
+
+    currentModel.position.y =
+        -(y - 0.5) *
+        planeHeight;
+
+    // Vertical offset placing the hat above the nose anchor.
+
+    currentModel.position.y += 1.0;
+    
+    // Apply the Z-axis rotation (Tilt)
+    if (roll !== undefined) {
+        currentModel.rotation.z = -roll; 
+    }
+    
+    // Sync the invisible head with the active asset's position
+    headOccluder.position.copy(currentModel.position);
+    
+    // Shift the invisible head slightly down so it sits under the hat brim
+    headOccluder.position.y -= 0.8;
+
 };
 
 // ============================================================================
-// 5B. POSITION UPDATE
-// ============================================================================
-
-function updateTrackedModel() {
-
-    if (
-        !currentModel ||
-        !latestTrackingData
-    ) {
-        return;
-    }
-
-    const landmarks =
-        latestTrackingData.landmarks;
-
-    let anchor;
-
-    if (
-        guiState.anchorPoint === "chest" &&
-        landmarks[11] &&
-        landmarks[12]
-    ) {
-
-        anchor = {
-            x:
-                (landmarks[11].x +
-                    landmarks[12].x) / 2,
-
-            y:
-                (landmarks[11].y +
-                    landmarks[12].y) / 2
-        };
-
-    } else {
-
-        anchor =
-            landmarks[0];
-    }
-
-    const x =
-        (anchor.x - 0.5) *
-        planeWidth;
-
-    const y =
-        -(anchor.y - 0.5) *
-        planeHeight;
-
-    const faceWidth =
-        Math.max(
-            latestTrackingData.faceWidth,
-            0.001
-        );
-
-    const scaleMultiplier =
-        faceWidth * 8;
-
-    const finalScale =
-        guiState.scale *
-        scaleMultiplier;
-
-    currentModel.scale.set(
-        finalScale,
-        finalScale,
-        finalScale
-    );
-
-    currentModel.position.set(
-        x + guiState.offsetX,
-        y + guiState.offsetY,
-        guiState.offsetZ
-    );
-
-    currentModel.rotation.x =
-        guiState.rotationX;
-
-    currentModel.rotation.y =
-        guiState.rotationY;
-
-    currentModel.rotation.z =
-        (-latestTrackingData.roll) +
-        guiState.rotationZ;
-
-    headOccluder.visible =
-        guiState.showOccluder;
-
-    headOccluder.position.copy(
-        currentModel.position
-    );
-
-    headOccluder.position.y +=
-        guiState.occluderOffsetY;
-
-    headOccluder.position.z +=
-        guiState.occluderOffsetZ;
-
-    const occluderScale =
-        guiState.occluderRadius *
-        scaleMultiplier;
-
-    headOccluder.scale.set(
-        occluderScale,
-        occluderScale,
-        occluderScale
-    );
-}
-
-// ============================================================================
-// 5C. PRODUCT SELECTION EVENTS
+// 5A. PRODUCT SELECTION EVENTS
 // ============================================================================
 
 document
@@ -660,9 +533,11 @@ document
                         ".asset-card"
                     )
                     .forEach(c => {
+
                         c.classList.remove(
                             "active"
                         );
+
                     });
 
                 card.classList.add(
@@ -679,24 +554,43 @@ document
                 loadPreviewModel(
                     modelFile
                 );
+
             }
         );
+
     });
 
-// ============================================================================
-// PUBLIC METHOD
-// ============================================================================
+/**
+ * Public Method:
+ * hideModel
+ *
+ * Invoked by camera.js whenever:
+ *
+ * - camera turns off
+ * - tracking is lost
+ * - user leaves frame
+ */
 
 window.hideModel = () => {
 
     if (currentModel) {
+
         currentModel.visible = false;
+
     }
+
 };
 
 // ============================================================================
-// 6. RENDER LOOP
+// 6. THE RENDER LOOP (ANIMATION PIPELINE)
 // ============================================================================
+
+/**
+ * Core rendering loop.
+ *
+ * requestAnimationFrame aligns rendering to the
+ * browser refresh rate for maximum efficiency.
+ */
 
 function animate() {
 
@@ -704,16 +598,10 @@ function animate() {
         animate
     );
 
-    ambientLight.intensity =
-        guiState.ambientIntensity;
-
-    directionalLight.intensity =
-        guiState.directionalIntensity;
-
-    updateTrackedModel();
-
     if (previewModel) {
+
         previewModel.rotation.y += 0.01;
+
     }
 
     renderer.render(
@@ -725,6 +613,9 @@ function animate() {
         previewScene,
         previewCamera
     );
+
 }
+
+// Kick off the render pipeline.
 
 animate();
