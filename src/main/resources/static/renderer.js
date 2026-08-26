@@ -94,7 +94,7 @@ function initializeDeveloperTools() {
     );
 
     console.log(
-        "Developer Tools Initialized. Press Ctrl+H."
+        "Developer Tools Initialized. Press Ctrl+X."
     );
 }
 
