@@ -32,14 +32,22 @@ function onResults(results) {
     }
     
     // MediaPipe Pose returns an array of 33 3D bodily landmarks.
-    // For hats and glasses, Landmark 0 (the nose) serves as our primary anchor point.
-    // (Note: Landmark 11 or 12 would be used for the left/right shoulder for a purse).
-    const nose = results.poseLandmarks[0];
+    // We grab the ears to calculate the head tilt (Roll) and face width.
+    const leftEar = results.poseLandmarks[7];
+    const rightEar = results.poseLandmarks[8];
     
-    // Broadcast the normalized X and Y coordinates to our WebGL rendering engine.
-    // The renderer will translate these (0.0 to 1.0) values into 3D virtual coordinates.
+    // Calculate the angle between the ears in radians (Z-Tilt)
+    const deltaY = rightEar.y - leftEar.y;
+    const deltaX = rightEar.x - leftEar.x;
+    const headTiltAngle = Math.atan2(deltaY, deltaX);
+    
+    // Calculate face width for dynamic distance scaling
+    const faceWidth = Math.sqrt((deltaX * deltaX) + (deltaY * deltaY));
+    
+    // Broadcast the ENTIRE landmark array, plus our calculated tilt and width 
+    // to our WebGL rendering engine.
     if (window.updateModelPosition) {
-        window.updateModelPosition(nose.x, nose.y);
+        window.updateModelPosition(results.poseLandmarks, headTiltAngle, faceWidth);
     }
 }
 
