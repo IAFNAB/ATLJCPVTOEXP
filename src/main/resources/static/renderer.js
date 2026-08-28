@@ -282,13 +282,7 @@ const MODEL_CONFIGS = {
         occluderRadius: 0.40, occluderOffsetY: -0.20, occluderOffsetZ: -0.30, 
         showOccluder: false
     },
-    "heartnecklace.glb": {
-         scale: 25.00, anchor: 'chest', 
-         offsetX: 0.80, offsetY: -18.30, offsetZ: -6.10, 
-         rotX: 0.00, rotY: 0.35, rotZ: 0.00, 
-         occluderRadius: 0.60, occluderOffsetY: 0.00, occluderOffsetZ: 0.00, 
-         showOccluder: false
-    },
+    
     "female_beach_hat.glb": {
         scale: 0.60, anchor: 'ears', 
         offsetX: 0.00, offsetY: 0.95, offsetZ: -1.00, 
