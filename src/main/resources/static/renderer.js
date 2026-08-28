@@ -547,7 +547,7 @@ window.updateModelPosition = (landmarks, headTiltAngle, faceWidth) => {
     const baselineWidth = 0.15; 
     let scaleMultiplier = (faceWidth !== undefined && faceWidth > 0) ? (faceWidth / baselineWidth) : 1.0;
     const finalScale = devControls.scale * scaleMultiplier;
-    currentModel.scale.set(finalScale, finalScale, finalScale);
+    
 
     // B) Calculate Anchor Position (Nose vs Ears vs Chest vs Wrist)
     let anchorX = 0, anchorY = 0, anchorRotation = 0;
@@ -573,18 +573,42 @@ window.updateModelPosition = (landmarks, headTiltAngle, faceWidth) => {
         anchorRotation = headTiltAngle !== undefined ? headTiltAngle : 0;
     }
 
-    // C) Apply Base Translations + GUI Offsets
-    currentModel.position.x = (anchorX - 0.5) * planeWidth + devControls.offsetX;
-    currentModel.position.y = -(anchorY - 0.5) * planeHeight + devControls.offsetY;
-    currentModel.position.z = devControls.offsetZ;
-    
-    const mirrorOffset = Math.PI;
+    // --- LERP SMOOTHING (SHOCK ABSORBER) ---
+// 0.15 means the object travels 15% of the distance to the new point per frame.
+// Lower = smoother but laggy. Higher = faster but jittery.
+const LERP_SPEED = 0.15;
 
-    currentModel.rotation.set(
-        currentModel.userData.nativeRotX + devControls.rotX,
-        currentModel.userData.nativeRotY + devControls.rotY,
-        currentModel.userData.nativeRotZ - anchorRotation + mirrorOffset + devControls.rotZ
-    );
+// 1. Smooth Scale
+const targetScale = new THREE.Vector3(
+    finalScale,
+    finalScale,
+    finalScale
+);
+currentModel.scale.lerp(targetScale, LERP_SPEED);
+
+// 2. Smooth Position
+const targetPosition = new THREE.Vector3(
+    (anchorX - 0.5) * planeWidth + devControls.offsetX,
+    -(anchorY - 0.5) * planeHeight + devControls.offsetY,
+    devControls.offsetZ
+);
+currentModel.position.lerp(targetPosition, LERP_SPEED);
+
+// 3. Smooth Rotation
+const mirrorOffset = Math.PI;
+
+const targetEuler = new THREE.Euler(
+    currentModel.userData.nativeRotX + devControls.rotX,
+    currentModel.userData.nativeRotY + devControls.rotY,
+    currentModel.userData.nativeRotZ - anchorRotation + mirrorOffset + devControls.rotZ
+);
+
+const targetQuaternion = new THREE.Quaternion().setFromEuler(targetEuler);
+
+currentModel.quaternion.slerp(
+    targetQuaternion,
+    LERP_SPEED
+);
 
     // D) Sync Anchor Debug Sphere
     anchorDebugSphere.position.set(
