@@ -299,7 +299,7 @@ const MODEL_CONFIGS = {
 
     // NEW WATCH CONFIG
     "handwatch.glb": {
-        scale: 5.00, 
+        scale: 0.20, 
         previewScale: 0.80, // <--- Add this dedicated UI scale
         anchor: 'wrist', 
         offsetX: 0.00, offsetY: 0.00, offsetZ: 0.00, 
