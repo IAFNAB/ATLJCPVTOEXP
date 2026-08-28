@@ -197,8 +197,9 @@ scene.add(headOccluder);
 
 const anchorDebugSphere = new THREE.Mesh(
     new THREE.SphereGeometry(0.08, 16, 16),
-    new THREE.MeshBasicMaterial({ color: 0x00ff00 })
+    new THREE.MeshBasicMaterial({ color: 0x00ff00, depthTest: false })
 );
+anchorDebugSphere.renderOrder = 999;
 anchorDebugSphere.visible = false;
 scene.add(anchorDebugSphere);
 
@@ -571,8 +572,12 @@ window.updateModelPosition = (landmarks, headTiltAngle, faceWidth) => {
         currentModel.userData.nativeRotZ - anchorRotation + mirrorOffset + devControls.rotZ
     );
 
-    // D) Sync Anchor Debug Sphere
-    anchorDebugSphere.position.copy(currentModel.position);
+    // D) Sync Anchor Debug Sphere to the RAW tracking coordinates
+    anchorDebugSphere.position.set(
+        (anchorX - 0.5) * planeWidth,
+        -(anchorY - 0.5) * planeHeight,
+        0 
+    );
 
     // E) Sync Head Occluder 
     if (debugSettings.showOccluder) {
@@ -639,7 +644,7 @@ function animate() {
     }
     
     // Toggle Occluder to visible material for debugging
-    headOccluder.material = (debugSettings.showOccluder && debugSettings.showAnchor) 
+    headOccluder.material = debugSettings.showOccluder 
         ? visibleOcclusionMaterial 
         : invisibleOcclusionMaterial;
     
