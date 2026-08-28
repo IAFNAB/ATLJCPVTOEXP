@@ -299,7 +299,9 @@ const MODEL_CONFIGS = {
 
     // NEW WATCH CONFIG
     "handwatch.glb": {
-        scale: 5.00, anchor: 'wrist', 
+        scale: 5.00, 
+        previewScale: 0.80, // <--- Add this dedicated UI scale
+        anchor: 'wrist', 
         offsetX: 0.00, offsetY: 0.00, offsetZ: 0.00, 
         rotX: 0.00, rotY: 0.00, rotZ: 0.00, 
         occluderRadius: 0.40, occluderOffsetY: 0.00, occluderOffsetZ: 0.00, 
@@ -476,10 +478,13 @@ function loadPreviewModel(modelFile) {
                 MODEL_CONFIGS[modelFile] ||
                 { scale: 0.6 };
 
+            // Use previewScale if it exists, otherwise fall back to the standard AR scale
+            const finalPreviewScale = config.previewScale || config.scale;
+
             previewModel.scale.set(
-                config.scale,
-                config.scale,
-                config.scale
+                finalPreviewScale,
+                finalPreviewScale,
+                finalPreviewScale
             );
 
             previewScene.add(
