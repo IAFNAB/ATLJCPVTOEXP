@@ -295,7 +295,7 @@ const MODEL_CONFIGS = {
         rotX: 0.60, rotY: 0.00, rotZ: 0.00, 
         occluderRadius: 0.75, occluderOffsetY: 0.55, occluderOffsetZ: -0.75, 
         showOccluder: false
-    }
+    },
 
     // NEW WATCH CONFIG
     "handwatch.glb": {
@@ -538,50 +538,50 @@ window.updateModelPosition = (landmarks, headTiltAngle, faceWidth) => {
 
     currentModel.visible = true;
 
-    // A) Dynamic Scale based on distance (Zoom in/out physically)
+    // A) Dynamic Scale based on distance
     const baselineWidth = 0.15; 
     let scaleMultiplier = (faceWidth !== undefined && faceWidth > 0) ? (faceWidth / baselineWidth) : 1.0;
-    
-    // Multiply your GUI scale by the physical distance scale
     const finalScale = devControls.scale * scaleMultiplier;
     currentModel.scale.set(finalScale, finalScale, finalScale);
 
-    // B) Calculate Anchor Position (Nose vs Ears vs Chest)
+    // B) Calculate Anchor Position (Nose vs Ears vs Chest vs Wrist)
     let anchorX = 0, anchorY = 0, anchorRotation = 0;
 
     if (devControls.anchor === 'chest' && landmarks[11] && landmarks[12]) {
-        // Upper Chest Math (Midpoint of Shoulders)
         anchorX = (landmarks[11].x + landmarks[12].x) / 2;
         anchorY = (landmarks[11].y + landmarks[12].y) / 2;
         anchorRotation = Math.atan2(landmarks[12].y - landmarks[11].y, landmarks[12].x - landmarks[11].x);
     } else if (devControls.anchor === 'ears' && landmarks[7] && landmarks[8]) {
-        // Top of Head Math (Midpoint of Ears - perfect for hats!)
         anchorX = (landmarks[7].x + landmarks[8].x) / 2;
         anchorY = (landmarks[7].y + landmarks[8].y) / 2;
         anchorRotation = headTiltAngle !== undefined ? headTiltAngle : 0;
+    } else if (devControls.anchor === 'wrist' && landmarks[15]) {
+        // NEW WRIST LOGIC
+        anchorX = landmarks[15].x;
+        anchorY = landmarks[15].y;
+        anchorRotation = (landmarks[13]) 
+            ? Math.atan2(landmarks[15].y - landmarks[13].y, landmarks[15].x - landmarks[13].x) 
+            : 0;
     } else {
-        // Default to Nose (Perfect for glasses)
         anchorX = landmarks[0].x;
         anchorY = landmarks[0].y;
         anchorRotation = headTiltAngle !== undefined ? headTiltAngle : 0;
     }
 
-// C) Apply Base Translations + GUI Offsets
+    // C) Apply Base Translations + GUI Offsets
     currentModel.position.x = (anchorX - 0.5) * planeWidth + devControls.offsetX;
     currentModel.position.y = -(anchorY - 0.5) * planeHeight + devControls.offsetY;
     currentModel.position.z = devControls.offsetZ;
     
-    // FIX: Add Math.PI to cancel out the anatomical mirror flip
     const mirrorOffset = Math.PI;
 
-    // ADD THE SLIDERS TO THE NATIVE ROTATION INSTEAD OF ERASING IT
     currentModel.rotation.set(
         currentModel.userData.nativeRotX + devControls.rotX,
         currentModel.userData.nativeRotY + devControls.rotY,
         currentModel.userData.nativeRotZ - anchorRotation + mirrorOffset + devControls.rotZ
     );
 
-    // D) Sync Anchor Debug Sphere to the RAW tracking coordinates
+    // D) Sync Anchor Debug Sphere
     anchorDebugSphere.position.set(
         (anchorX - 0.5) * planeWidth,
         -(anchorY - 0.5) * planeHeight,
@@ -591,11 +591,9 @@ window.updateModelPosition = (landmarks, headTiltAngle, faceWidth) => {
     // E) Sync Head Occluder 
     if (debugSettings.showOccluder) {
         headOccluder.visible = true;
-        // Dynamically resize occlusion sphere based on your dev tool sliders
         headOccluder.geometry.dispose();
         headOccluder.geometry = new THREE.SphereGeometry(devControls.occluderRadius, 32, 32);
         
-        // Always base the occluder off the ears/center of head for accurate blocking
         let occX = (landmarks[7] && landmarks[8]) ? (landmarks[7].x + landmarks[8].x) / 2 : anchorX;
         let occY = (landmarks[7] && landmarks[8]) ? (landmarks[7].y + landmarks[8].y) / 2 : anchorY;
         
@@ -616,28 +614,6 @@ window.updateModelPosition = (landmarks, headTiltAngle, faceWidth) => {
                 landmarkSpheres[i].position.y = -(landmarks[i].y - 0.5) * planeHeight;
             }
         }
-    } 
-    if (devControls.anchor === 'chest' && landmarks[11] && landmarks[12]) {
-        anchorX = (landmarks[11].x + landmarks[12].x) / 2;
-        anchorY = (landmarks[11].y + landmarks[12].y) / 2;
-        anchorRotation = Math.atan2(landmarks[12].y - landmarks[11].y, landmarks[12].x - landmarks[11].x);
-    } else if (devControls.anchor === 'ears' && landmarks[7] && landmarks[8]) {
-        anchorX = (landmarks[7].x + landmarks[8].x) / 2;
-        anchorY = (landmarks[7].y + landmarks[8].y) / 2;
-        anchorRotation = headTiltAngle !== undefined ? headTiltAngle : 0;
-    
-    // NEW WRIST LOGIC (Tracks Left Wrist [15] and angles based on Left Elbow [13])
-    } else if (devControls.anchor === 'wrist' && landmarks[15]) {
-        anchorX = landmarks[15].x;
-        anchorY = landmarks[15].y;
-        anchorRotation = (landmarks[13]) 
-            ? Math.atan2(landmarks[15].y - landmarks[13].y, landmarks[15].x - landmarks[13].x) 
-            : 0;
-            
-    } else {
-        anchorX = landmarks[0].x;
-        anchorY = landmarks[0].y;
-        anchorRotation = headTiltAngle !== undefined ? headTiltAngle : 0;
     } else {
         landmarksGroup.visible = false;
     }
