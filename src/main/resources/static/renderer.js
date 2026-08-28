@@ -296,6 +296,15 @@ const MODEL_CONFIGS = {
         occluderRadius: 0.75, occluderOffsetY: 0.55, occluderOffsetZ: -0.75, 
         showOccluder: false
     }
+
+    // NEW WATCH CONFIG
+    "handwatch.glb": {
+        scale: 5.00, anchor: 'wrist', 
+        offsetX: 0.00, offsetY: 0.00, offsetZ: 0.00, 
+        rotX: 0.00, rotY: 0.00, rotZ: 0.00, 
+        occluderRadius: 0.40, occluderOffsetY: 0.00, occluderOffsetZ: 0.00, 
+        showOccluder: false
+    }
 };
 
 // ============================================================================
@@ -607,6 +616,28 @@ window.updateModelPosition = (landmarks, headTiltAngle, faceWidth) => {
                 landmarkSpheres[i].position.y = -(landmarks[i].y - 0.5) * planeHeight;
             }
         }
+    } 
+    if (devControls.anchor === 'chest' && landmarks[11] && landmarks[12]) {
+        anchorX = (landmarks[11].x + landmarks[12].x) / 2;
+        anchorY = (landmarks[11].y + landmarks[12].y) / 2;
+        anchorRotation = Math.atan2(landmarks[12].y - landmarks[11].y, landmarks[12].x - landmarks[11].x);
+    } else if (devControls.anchor === 'ears' && landmarks[7] && landmarks[8]) {
+        anchorX = (landmarks[7].x + landmarks[8].x) / 2;
+        anchorY = (landmarks[7].y + landmarks[8].y) / 2;
+        anchorRotation = headTiltAngle !== undefined ? headTiltAngle : 0;
+    
+    // NEW WRIST LOGIC (Tracks Left Wrist [15] and angles based on Left Elbow [13])
+    } else if (devControls.anchor === 'wrist' && landmarks[15]) {
+        anchorX = landmarks[15].x;
+        anchorY = landmarks[15].y;
+        anchorRotation = (landmarks[13]) 
+            ? Math.atan2(landmarks[15].y - landmarks[13].y, landmarks[15].x - landmarks[13].x) 
+            : 0;
+            
+    } else {
+        anchorX = landmarks[0].x;
+        anchorY = landmarks[0].y;
+        anchorRotation = headTiltAngle !== undefined ? headTiltAngle : 0;
     } else {
         landmarksGroup.visible = false;
     }
