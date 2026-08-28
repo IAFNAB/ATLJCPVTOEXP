@@ -280,7 +280,7 @@ const MODEL_CONFIGS = {
         offsetX: 0.10, offsetY: 0.00, offsetZ: 0.45, 
         rotX: 0.00, rotY: 0.15, rotZ: 0.00, 
         occluderRadius: 0.40, occluderOffsetY: -0.20, occluderOffsetZ: -0.30, 
-        showOccluder: true
+        showOccluder: false
     },
     "heartnecklace.glb": {
          scale: 25.00, anchor: 'chest', 
