@@ -277,8 +277,8 @@ const MODEL_CONFIGS = {
     },
     "raybanglasses.glb": {
         scale: 0.63, anchor: 'ears', 
-        offsetX: 0.10, offsetY: 0.00, offsetZ: 0.45, 
-        rotX: 0.00, rotY: 0.15, rotZ: 0.00, 
+        offsetX: 0.00, offsetY: 0.00, offsetZ: 0.45, 
+        rotX: 0.00, rotY: 0.00, rotZ: 0.00, 
         occluderRadius: 0.40, occluderOffsetY: -0.20, occluderOffsetZ: -0.30, 
         showOccluder: false
     },
@@ -291,8 +291,8 @@ const MODEL_CONFIGS = {
     },
     "female_beach_hat.glb": {
         scale: 0.60, anchor: 'ears', 
-        offsetX: -0.30, offsetY: 0.95, offsetZ: -1.00, 
-        rotX: 0.60, rotY: 0.00, rotZ: 0.00, 
+        offsetX: 0.00, offsetY: 0.95, offsetZ: -1.00, 
+        rotX: 0.50, rotY: 0.00, rotZ: 0.00, 
         occluderRadius: 0.75, occluderOffsetY: 0.55, occluderOffsetZ: -0.75, 
         showOccluder: false
     },
