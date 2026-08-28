@@ -576,7 +576,7 @@ window.updateModelPosition = (landmarks, headTiltAngle, faceWidth) => {
     // --- LERP SMOOTHING (SHOCK ABSORBER) ---
 // 0.15 means the object travels 15% of the distance to the new point per frame.
 // Lower = smoother but laggy. Higher = faster but jittery.
-const LERP_SPEED = 0.20;
+const LERP_SPEED = 0.25;
 
 // 1. Smooth Scale
 const targetScale = new THREE.Vector3(
