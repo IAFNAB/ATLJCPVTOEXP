@@ -501,21 +501,21 @@ function loadPreviewModel(modelFile) {
 // Begin timing asset initialization.
 
 console.time(
-    "TopHatLoad"
+    "DefaultModel"
 );
 
 // Default startup asset.
 
 loadARModel(
-    "top_hat.glb"
+    "female_beach_hat.glb"
 );
 
 loadPreviewModel(
-    "top_hat.glb"
+    "female_beach_hat.glb"
 );
 
 console.timeEnd(
-    "TopHatLoad"
+    "DefaultModel"
 );
 
 // ============================================================================
