@@ -1,70 +1,36 @@
 /*
 =========================================================================================
 File: tracking.js
-Description: Computer Vision & Spatial Tracking Layer (Google MediaPipe)
+Description: Computer Vision & Spatial Tracking Layer (Google MediaPipe Holistic)
 Project: JCPenney Virtual Try-On Experience (Hackathon Prototype)
 Team: Not a Bug, It's a Feature
 
 Overview:
-This module ingests the raw HTML5 video feed and processes it through:
-  1. Google MediaPipe Pose     — body anchors (wrist [15/16], chest [11/12])
-  2. Google MediaPipe Face Mesh — face anchors (hats, glasses) with 468 landmarks
+This module ingests the raw HTML5 video feed and processes it through Google's
+MediaPipe Holistic model. Holistic is a unified solution that delivers:
 
-Both models run client-side, in parallel, on every video frame. The Pose model
-handles body-scale tracking; Face Mesh provides sub-centimeter face geometry.
-The renderer receives results from both on every tick.
+  - 33 pose landmarks  (body, wrist, chest — same layout as the Pose model)
+  - 468 face landmarks (precise facial geometry for hats and glasses)
+  - 21 hand landmarks  (left and right, available for future use)
+
+Using a single Holistic model eliminates the WASM namespace conflict that occurs
+when Pose and Face Mesh are loaded as two separate models simultaneously.
+All results arrive in one callback, in lockstep with the camera feed.
 =========================================================================================
 */
 
 const videoElement = document.getElementById('video');
 
 // ============================================================================
-// 1. SHARED LANDMARK STATE
-// ============================================================================
-// Each ML model fires results asynchronously. We cache the latest result from
-// each model and combine them when broadcasting to the renderer.
-
-let latestFaceLandmarks = null;
-
-// ============================================================================
-// 2. FACE MESH TRACKER (Precise Face Anchors: Hats, Glasses)
-// ============================================================================
-// MediaPipe Face Mesh delivers 468 tightly-tracked facial landmarks.
-// This replaces the coarse Pose ear estimates ([7]/[8]) which caused floating.
-//
-// Key landmarks used:
-//   234  = left temple  (inter-ear midpoint anchor)
-//   454  = right temple (inter-ear midpoint anchor)
-//   1    = nose tip     (nose anchor fallback)
-
-const faceMeshTracker = new FaceMesh({
-    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
-});
-
-faceMeshTracker.setOptions({
-    maxNumFaces: 1,
-    refineLandmarks: false,        // false = faster inference; sufficient for anchoring
-    minDetectionConfidence: 0.5,
-    minTrackingConfidence: 0.5
-});
-
-faceMeshTracker.onResults((results) => {
-    if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
-        latestFaceLandmarks = results.multiFaceLandmarks[0];
-    } else {
-        latestFaceLandmarks = null;
-    }
-});
-
-// ============================================================================
-// 3. POSE TRACKER (Body Anchors: Wrist, Chest)
+// 1. ML TRACKING PIPELINE (RESULTS HANDLER)
 // ============================================================================
 /**
- * Callback triggered every time the Pose model processes a video frame.
- * Combines Pose landmarks with the latest Face Mesh output before broadcasting
- * to the WebGL renderer.
+ * Callback triggered every time the Holistic model processes a video frame.
+ * Receives pose landmarks AND face mesh landmarks in a single results object.
  *
- * @param {Object} results - MediaPipe Pose output payload.
+ * @param {Object} results - MediaPipe Holistic output payload.
+ *   results.poseLandmarks   — 33 body landmarks (same as standalone Pose)
+ *   results.faceLandmarks   — 468 face mesh landmarks (same as standalone Face Mesh)
  */
 function onResults(results) {
     // Guard clause: no person detected — hide the active 3D model.
@@ -73,20 +39,24 @@ function onResults(results) {
         return;
     }
 
+    // Holistic delivers face landmarks alongside pose in the same frame.
+    const faceLandmarks = results.faceLandmarks || null;
+
     let headTiltAngle = 0;
     let faceWidth = 0.30; // default fallback in normalized Face Mesh coordinates
 
-    if (latestFaceLandmarks) {
+    if (faceLandmarks && faceLandmarks[234] && faceLandmarks[454]) {
         // Face Mesh temples give a stable, precise inter-ear span.
-        // These landmarks barely move relative to the face even during head turns.
-        const leftTemple  = latestFaceLandmarks[234];
-        const rightTemple = latestFaceLandmarks[454];
+        // Landmark 234 = left temple, 454 = right temple.
+        const leftTemple  = faceLandmarks[234];
+        const rightTemple = faceLandmarks[454];
         const deltaX = rightTemple.x - leftTemple.x;
         const deltaY = rightTemple.y - leftTemple.y;
         headTiltAngle = Math.atan2(deltaY, deltaX);
         faceWidth = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
     } else {
-        // Fallback: Pose ear landmarks while Face Mesh warms up (first ~2 frames).
+        // Fallback: Pose ear landmarks during the first few frames before
+        // Holistic's face sub-model has warmed up.
         const leftEar  = results.poseLandmarks[7];
         const rightEar = results.poseLandmarks[8];
         const deltaX = rightEar.x - leftEar.x;
@@ -95,58 +65,64 @@ function onResults(results) {
         faceWidth = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
     }
 
-    // Broadcast pose landmarks, head tilt, face width, and precise face landmarks
+    // Broadcast pose landmarks, head tilt, face width, and face mesh landmarks
     // to the WebGL rendering engine.
     if (window.updateModelPosition) {
         window.updateModelPosition(
             results.poseLandmarks,
             headTiltAngle,
             faceWidth,
-            latestFaceLandmarks   // precise 468-landmark face geometry
+            faceLandmarks   // precise 468-landmark face geometry
         );
     }
 }
 
 // ============================================================================
-// 4. MEDIAPIPE POSE TRACKER CONFIGURATION
+// 2. MEDIAPIPE HOLISTIC TRACKER CONFIGURATION
 // ============================================================================
-const poseTracker = new Pose({locateFile: (file) => {
-    return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
-}});
+// A single Holistic model replaces the separate Pose + Face Mesh setup.
+// This eliminates the WASM global namespace collision that crashes both models.
 
-poseTracker.setOptions({
-    modelComplexity: 1,           // 0=Fastest/Less Accurate, 1=Balanced, 2=Slowest/Highly Accurate
-    smoothLandmarks: true,        // Applies jitter-reduction filters to the spatial data
-    minDetectionConfidence: 0.5,  // Minimum confidence threshold to initially detect a person
-    minTrackingConfidence: 0.5    // Minimum confidence threshold to maintain tracking frame-to-frame
+const holisticTracker = new Holistic({
+    locateFile: (file) => {
+        return `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${file}`;
+    }
 });
 
-poseTracker.onResults(onResults);
+holisticTracker.setOptions({
+    modelComplexity: 1,           // 0=Fastest, 1=Balanced, 2=Most Accurate
+    smoothLandmarks: true,        // Jitter-reduction on pose landmarks
+    enableSegmentation: false,    // Not needed — saves processing time
+    smoothSegmentation: false,
+    refineFaceLandmarks: false,   // false = faster; sufficient for anchoring
+    minDetectionConfidence: 0.5,
+    minTrackingConfidence: 0.5
+});
+
+holisticTracker.onResults(onResults);
 
 // ============================================================================
-// 5. HARDWARE STREAM BINDING
+// 3. HARDWARE STREAM BINDING
 // ============================================================================
-// Send each video frame to BOTH trackers simultaneously via Promise.all.
-// This keeps both models in lockstep with the camera feed.
+// The MediaPipe Camera utility feeds raw frames into the Holistic model.
+// One model, one send per frame — no concurrent WASM conflicts.
+
 const mlCamera = new Camera(videoElement, {
     onFrame: async () => {
-        await Promise.all([
-            poseTracker.send({image: videoElement}),
-            faceMeshTracker.send({image: videoElement})
-        ]);
+        await holisticTracker.send({image: videoElement});
     },
     width: 640,
     height: 480
 });
 
 // ============================================================================
-// 6. PUBLIC API EXPORTS
+// 4. PUBLIC API EXPORTS
 // ============================================================================
 /**
  * Public Method: startTrackingLoop
  * Invoked by camera.js immediately after the hardware webcam stream is authorized.
  */
 window.startTrackingLoop = () => {
-    console.log("Tracking Layer: Starting MediaPipe Pose + Face Mesh spatial tracking loop...");
+    console.log("Tracking Layer: Starting MediaPipe Holistic spatial tracking loop...");
     mlCamera.start();
 };
