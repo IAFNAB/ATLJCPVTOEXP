@@ -623,7 +623,7 @@ window.updateModelPosition = (landmarks, headTiltAngle, faceWidth) => {
 
         headOccluder.position.x = (occX - 0.5) * planeWidth;
         headOccluder.position.y = -(occY - 0.5) * planeHeight + devControls.occluderOffsetY;
-        headOccluder.position.z = devControls.occluderOffsetZ;
+        headOccluder.position.z = devControls.occluderOffsetZ * scaleMultiplier;
         headOccluder.scale.set(scaleMultiplier, scaleMultiplier, scaleMultiplier);
     } else {
         headOccluder.visible = false;
