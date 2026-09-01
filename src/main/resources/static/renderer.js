@@ -550,8 +550,8 @@ const vFov = camera.fov * Math.PI / 180;
 const planeHeight = 2 * Math.tan(vFov / 2) * camera.position.z;
 const planeWidth = planeHeight * camera.aspect;
 
-// Updated to accept the full array, tilt angle, and dynamic face width
-window.updateModelPosition = (landmarks, headTiltAngle, faceWidth) => {
+// Updated to accept the full array, tilt angle, dynamic face width, and live yaw angle
+window.updateModelPosition = (landmarks, headTiltAngle, faceWidth, headYawAngle = 0) => {
     if (!currentModel || !landmarks) return;
 
     if (!firstPoseDetected) {
@@ -619,9 +619,15 @@ window.updateModelPosition = (landmarks, headTiltAngle, faceWidth) => {
     // 3. Smooth Rotation
     const mirrorOffset = Math.PI;
 
+    // Apply live yaw only for face-anchored items (ears / nose).
+    // Chest and wrist anchors derive their own rotation from body landmarks.
+    const faceYaw = (devControls.anchor === 'ears' || devControls.anchor === 'nose')
+        ? headYawAngle
+        : 0;
+
     const targetEuler = new THREE.Euler(
         currentModel.userData.nativeRotX + devControls.rotX,
-        currentModel.userData.nativeRotY + devControls.rotY,
+        currentModel.userData.nativeRotY + faceYaw + devControls.rotY,
         currentModel.userData.nativeRotZ - anchorRotation + mirrorOffset + devControls.rotZ
     );
 
