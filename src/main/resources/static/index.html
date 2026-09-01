@@ -326,21 +326,20 @@ and handle user interactions.
             <div id="previewContainer">
                 <canvas id="previewCanvas"></canvas>
             </div>
-            <!--
+
             <div class="asset-card active"
                  data-model="top_hat.glb">
                 Top Hat
-            </div>
-            -->
-            
-            <div class="asset-card"
-                 data-model="female_beach_hat.glb">
-                Beach Hat
             </div>
 
             <div class="asset-card"
                  data-model="raybanglasses.glb">
                 Ray-Ban Glasses
+            </div>
+
+            <div class="asset-card"
+                 data-model="female_beach_hat.glb">
+                Beach Hat
             </div>
 
               <div class="asset-card"
@@ -374,6 +373,8 @@ and handle user interactions.
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+    <!-- Face Mesh: 468-landmark precise face tracker for hat/glasses anchoring -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
 
     <script src="api.js"></script>       <!-- 1. Backend communication methods -->
     <script src="camera.js"></script>    <!-- 2. Hardware stream initialization -->
