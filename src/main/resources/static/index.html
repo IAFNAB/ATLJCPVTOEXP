@@ -372,9 +372,8 @@ and handle user interactions.
     <!-- Google MediaPipe ML Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
-    <!-- Face Mesh: 468-landmark precise face tracker for hat/glasses anchoring -->
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+    <!-- Holistic: single model delivering pose (33 pts) + face mesh (468 pts) with no WASM conflicts -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic/holistic.js" crossorigin="anonymous"></script>
 
     <script src="api.js"></script>       <!-- 1. Backend communication methods -->
     <script src="camera.js"></script>    <!-- 2. Hardware stream initialization -->
