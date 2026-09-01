@@ -369,6 +369,10 @@ function loadARModel(modelFile) {
             scene.add(currentModel);
 
             if (assetLoadingMessage) assetLoadingMessage.style.display = "none";
+
+            // Once the default model is loaded, quietly warm the cache for
+            // all other models so clicks feel instant instead of waiting.
+            preloadModelCache();
         },
         undefined,
         function (error) {
@@ -517,6 +521,26 @@ loadPreviewModel(
 console.timeEnd(
     "DefaultModel"
 );
+
+// ============================================================================
+// 4E. BACKGROUND MODEL CACHE WARMER
+// ============================================================================
+/**
+ * Uses the browser's native fetch() to download every GLB into the HTTP cache
+ * at low priority. When the user then clicks a card, Three.js GLTFLoader
+ * picks it up from cache instantly instead of re-downloading over the network.
+ *
+ * Called automatically after the default model finishes loading so it does
+ * not compete with the primary download for bandwidth.
+ */
+function preloadModelCache() {
+    const allModels = Object.keys(MODEL_CONFIGS);
+    allModels.forEach(file => {
+        fetch(`models/${file}`, { priority: 'low', cache: 'force-cache' })
+            .then(() => console.log(`[Preloader] Cached: ${file}`))
+            .catch(err => console.warn(`[Preloader] Failed to cache ${file}:`, err));
+    });
+}
 
 // ============================================================================
 // 5. SPATIAL TRACKING MAPPING (2D TO 3D CONVERSION)
