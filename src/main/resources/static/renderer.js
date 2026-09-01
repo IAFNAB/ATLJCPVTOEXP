@@ -56,15 +56,12 @@ const devControls = {
     rotX: 0.0,
     rotY: 0.0,
     rotZ: 0.0,
-    // Per-model mirror offset: Math.PI for webcam-mirrored face assets (hats/glasses),
-    // 0 for body assets (watch) that don't need the flip compensation.
-    mirrorOffset: Math.PI,
     occluderRadius: 0.6,
     occluderOffsetY: -0.8,
     occluderOffsetZ: 0.0,
     logValues: () => {
         // This formats the output exactly how you need it for your code
-        const configStr = `scale: ${devControls.scale.toFixed(2)}, anchor: '${devControls.anchor}', offsetX: ${devControls.offsetX.toFixed(2)}, offsetY: ${devControls.offsetY.toFixed(2)}, offsetZ: ${devControls.offsetZ.toFixed(2)}, rotX: ${devControls.rotX.toFixed(2)}, rotY: ${devControls.rotY.toFixed(2)}, rotZ: ${devControls.rotZ.toFixed(2)}, mirrorOffset: ${devControls.mirrorOffset.toFixed(4)}, occluderRadius: ${devControls.occluderRadius.toFixed(2)}, occluderOffsetY: ${devControls.occluderOffsetY.toFixed(2)}, occluderOffsetZ: ${devControls.occluderOffsetZ.toFixed(2)}, showOccluder: ${debugSettings.showOccluder}`;
+        const configStr = `scale: ${devControls.scale.toFixed(2)}, anchor: '${devControls.anchor}', offsetX: ${devControls.offsetX.toFixed(2)}, offsetY: ${devControls.offsetY.toFixed(2)}, offsetZ: ${devControls.offsetZ.toFixed(2)}, rotX: ${devControls.rotX.toFixed(2)}, rotY: ${devControls.rotY.toFixed(2)}, rotZ: ${devControls.rotZ.toFixed(2)}, occluderRadius: ${devControls.occluderRadius.toFixed(2)}, occluderOffsetY: ${devControls.occluderOffsetY.toFixed(2)}, occluderOffsetZ: ${devControls.occluderOffsetZ.toFixed(2)}, showOccluder: ${debugSettings.showOccluder}`;
         console.log(`[COPY THIS TO MODEL_CONFIGS]: \n{ ${configStr} }`);
         alert("Config printed to browser console!");
     }
@@ -92,8 +89,6 @@ function initializeDeveloperTools() {
     transformFolder.add(devControls, 'rotX', -Math.PI, Math.PI, 0.05).name('Pitch (Rot X)');
     transformFolder.add(devControls, 'rotY', -Math.PI, Math.PI, 0.05).name('Yaw (Rot Y)');
     transformFolder.add(devControls, 'rotZ', -Math.PI, Math.PI, 0.05).name('Roll (Rot Z)');
-    // 0 = no mirror flip (watch), Math.PI = webcam mirror compensation (hats/glasses)
-    transformFolder.add(devControls, 'mirrorOffset', 0, Math.PI * 2, 0.05).name('Mirror Offset');
 
     // New Occlusion Folder
     const occFolder = developerGui.addFolder("Occlusion (Head)");
@@ -273,41 +268,37 @@ const loader =
 // Expanded configuration to lock in the exact slider values for each asset.
 const MODEL_CONFIGS = {
     "top_hat.glb": {
-        scale: 0.63,
-        anchor: 'ears',
-        offsetX: 0.00, offsetY: 1.05, offsetZ: 0.35,
-        rotX: 0.45, rotY: 0.00, rotZ: 0.00,
-        mirrorOffset: Math.PI,  // webcam mirror compensation
-        occluderRadius: 0.60, occluderOffsetY: 0.50, occluderOffsetZ: 0.00,
+        scale: 0.63, 
+        anchor: 'ears', 
+        offsetX: 0.00, offsetY: 1.05, offsetZ: 0.35, 
+        rotX: 0.45, rotY: 0.00, rotZ: 0.00, 
+        occluderRadius: 0.60, occluderOffsetY: 0.50, occluderOffsetZ: 0.00, 
         showOccluder: false
     },
     "raybanglasses.glb": {
-        scale: 0.63, anchor: 'ears',
-        offsetX: 0.00, offsetY: 0.00, offsetZ: 0.45,
-        rotX: 0.00, rotY: 0.00, rotZ: 0.00,
-        mirrorOffset: Math.PI,  // webcam mirror compensation
-        occluderRadius: 0.40, occluderOffsetY: -0.20, occluderOffsetZ: -0.30,
+        scale: 0.63, anchor: 'ears', 
+        offsetX: 0.00, offsetY: 0.00, offsetZ: 0.45, 
+        rotX: 0.00, rotY: 0.00, rotZ: 0.00, 
+        occluderRadius: 0.40, occluderOffsetY: -0.20, occluderOffsetZ: -0.30, 
         showOccluder: false
     },
-
+    
     "female_beach_hat.glb": {
-        scale: 0.60, anchor: 'ears',
-        offsetX: 0.00, offsetY: 0.95, offsetZ: -1.00,
-        rotX: 0.50, rotY: 0.00, rotZ: 0.00,
-        mirrorOffset: Math.PI,  // webcam mirror compensation
-        occluderRadius: 0.75, occluderOffsetY: 0.55, occluderOffsetZ: -0.75,
+        scale: 0.60, anchor: 'ears', 
+        offsetX: 0.00, offsetY: 0.95, offsetZ: -1.00, 
+        rotX: 0.50, rotY: 0.00, rotZ: 0.00, 
+        occluderRadius: 0.75, occluderOffsetY: 0.55, occluderOffsetZ: -0.75, 
         showOccluder: false
     },
 
-    // Watch: no webcam mirror compensation needed (body-space asset)
+    // NEW WATCH CONFIG
     "handwatch.glb": {
-        scale: 0.20,
-        previewScale: 0.60,  // dedicated UI preview scale
-        anchor: 'wrist',
-        offsetX: 0.00, offsetY: 0.00, offsetZ: 0.00,
-        rotX: 0.00, rotY: 0.00, rotZ: 0.00,
-        mirrorOffset: 0,     // no mirror flip for wrist-space geometry
-        occluderRadius: 0.40, occluderOffsetY: 0.00, occluderOffsetZ: 0.00,
+        scale: 0.20, 
+        previewScale: 0.60, // <--- Add this dedicated UI scale
+        anchor: 'wrist', 
+        offsetX: 0.00, offsetY: 0.00, offsetZ: 0.00, 
+        rotX: 0.00, rotY: 0.00, rotZ: 0.00, 
+        occluderRadius: 0.40, occluderOffsetY: 0.00, occluderOffsetZ: 0.00, 
         showOccluder: false
     }
 };
@@ -355,7 +346,6 @@ function loadARModel(modelFile) {
             devControls.rotX = config.rotX;
             devControls.rotY = config.rotY;
             devControls.rotZ = config.rotZ;
-            devControls.mirrorOffset = (config.mirrorOffset !== undefined) ? config.mirrorOffset : Math.PI;
             devControls.occluderRadius = config.occluderRadius;
             devControls.occluderOffsetY = config.occluderOffsetY;
             devControls.occluderOffsetZ = config.occluderOffsetZ;
@@ -511,21 +501,21 @@ function loadPreviewModel(modelFile) {
 // Begin timing asset initialization.
 
 console.time(
-    "TopHatLoad"
+    "DefaultModel"
 );
 
 // Default startup asset.
 
 loadARModel(
-    "top_hat.glb"
+    "female_beach_hat.glb"
 );
 
 loadPreviewModel(
-    "top_hat.glb"
+    "female_beach_hat.glb"
 );
 
 console.timeEnd(
-    "TopHatLoad"
+    "DefaultModel"
 );
 
 // ============================================================================
@@ -537,7 +527,7 @@ const planeHeight = 2 * Math.tan(vFov / 2) * camera.position.z;
 const planeWidth = planeHeight * camera.aspect;
 
 // Updated to accept the full array, tilt angle, and dynamic face width
-window.updateModelPosition = (landmarks, headTiltAngle, faceWidth, faceLandmarks) => {
+window.updateModelPosition = (landmarks, headTiltAngle, faceWidth) => {
     if (!currentModel || !landmarks) return;
 
     if (!firstPoseDetected) {
@@ -548,87 +538,39 @@ window.updateModelPosition = (landmarks, headTiltAngle, faceWidth, faceLandmarks
     currentModel.visible = true;
 
     // A) Dynamic Scale based on distance
-    // Baseline calibrated for Face Mesh inter-temple distance in normalized coords (~0.30).
-    // Clamped to [0.5, 2.0] to prevent runaway scaling from tracking noise.
-    const baselineWidth = 0.30;
+    const baselineWidth = 0.15; 
     let scaleMultiplier = (faceWidth !== undefined && faceWidth > 0) ? (faceWidth / baselineWidth) : 1.0;
-    scaleMultiplier = Math.max(0.5, Math.min(2.0, scaleMultiplier));
     const finalScale = devControls.scale * scaleMultiplier;
     
 
-    // B) Calculate Anchor Position
-    // Face anchors ('ears', 'nose') use Face Mesh landmarks for precision.
-    // Body anchors ('chest', 'wrist') use Pose landmarks.
+    // B) Calculate Anchor Position (Nose vs Ears vs Chest vs Wrist)
     let anchorX = 0, anchorY = 0, anchorRotation = 0;
 
-    if (devControls.anchor === 'ears') {
-        if (faceLandmarks && faceLandmarks[234] && faceLandmarks[454]) {
-            // Face Mesh: 234 = left temple, 454 = right temple.
-            // These track the skull surface and barely slip during head turns.
-            anchorX = (faceLandmarks[234].x + faceLandmarks[454].x) / 2;
-            anchorY = (faceLandmarks[234].y + faceLandmarks[454].y) / 2;
-            anchorRotation = headTiltAngle !== undefined ? headTiltAngle : 0;
-        } else if (landmarks[7] && landmarks[8]) {
-            // Fallback: Pose ears while Face Mesh warms up
-            anchorX = (landmarks[7].x + landmarks[8].x) / 2;
-            anchorY = (landmarks[7].y + landmarks[8].y) / 2;
-            anchorRotation = headTiltAngle !== undefined ? headTiltAngle : 0;
-        }
-    } else if (devControls.anchor === 'chest' && landmarks[11] && landmarks[12]) {
+    if (devControls.anchor === 'chest' && landmarks[11] && landmarks[12]) {
         anchorX = (landmarks[11].x + landmarks[12].x) / 2;
         anchorY = (landmarks[11].y + landmarks[12].y) / 2;
         anchorRotation = Math.atan2(landmarks[12].y - landmarks[11].y, landmarks[12].x - landmarks[11].x);
-    } else if (devControls.anchor === 'wrist') {
-        // Best-visibility wrist selection: pick whichever wrist MediaPipe is most
-        // confident about in the current frame. Enables both left and right wrist.
-        const leftWrist  = landmarks[15];
-        const rightWrist = landmarks[16];
-        let wristLandmark = null;
-        let elbowLandmark = null;
-
-        if (leftWrist && rightWrist) {
-            if ((leftWrist.visibility || 0) >= (rightWrist.visibility || 0)) {
-                wristLandmark = leftWrist;
-                elbowLandmark = landmarks[13]; // left elbow
-            } else {
-                wristLandmark = rightWrist;
-                elbowLandmark = landmarks[14]; // right elbow
-            }
-        } else if (leftWrist) {
-            wristLandmark = leftWrist;
-            elbowLandmark = landmarks[13];
-        } else if (rightWrist) {
-            wristLandmark = rightWrist;
-            elbowLandmark = landmarks[14];
-        }
-
-        if (wristLandmark) {
-            anchorX = wristLandmark.x;
-            anchorY = wristLandmark.y;
-            anchorRotation = elbowLandmark
-                ? Math.atan2(wristLandmark.y - elbowLandmark.y, wristLandmark.x - elbowLandmark.x)
-                : 0;
-        }
+    } else if (devControls.anchor === 'ears' && landmarks[7] && landmarks[8]) {
+        anchorX = (landmarks[7].x + landmarks[8].x) / 2;
+        anchorY = (landmarks[7].y + landmarks[8].y) / 2;
+        anchorRotation = headTiltAngle !== undefined ? headTiltAngle : 0;
+    } else if (devControls.anchor === 'wrist' && landmarks[15]) {
+        // NEW WRIST LOGIC
+        anchorX = landmarks[15].x;
+        anchorY = landmarks[15].y;
+        anchorRotation = (landmarks[13]) 
+            ? Math.atan2(landmarks[15].y - landmarks[13].y, landmarks[15].x - landmarks[13].x) 
+            : 0;
     } else {
-        // Default: nose anchor
-        if (faceLandmarks && faceLandmarks[1]) {
-            // Face Mesh landmark 1 = nose tip (more stable than Pose landmark 0)
-            anchorX = faceLandmarks[1].x;
-            anchorY = faceLandmarks[1].y;
-        } else {
-            anchorX = landmarks[0].x;
-            anchorY = landmarks[0].y;
-        }
+        anchorX = landmarks[0].x;
+        anchorY = landmarks[0].y;
         anchorRotation = headTiltAngle !== undefined ? headTiltAngle : 0;
     }
 
-    // --- LERP SMOOTHING (SPLIT SPEEDS) ---
-    // Rotation must be fast so the asset feels glued to the face during head tilts.
-    // Position can afford slight smoothing for a grounded, natural feel.
-    // Scale is slowest to absorb tracking noise without jarring size pops.
-    const LERP_POSITION = 0.25;
-    const LERP_ROTATION = 0.50;
-    const LERP_SCALE    = 0.15;
+    // --- LERP SMOOTHING (SHOCK ABSORBER) ---
+// 0.15 means the object travels 15% of the distance to the new point per frame.
+// Lower = smoother but laggy. Higher = faster but jittery.
+const LERP_SPEED = 0.80;
 
 // 1. Smooth Scale
 const targetScale = new THREE.Vector3(
@@ -636,7 +578,7 @@ const targetScale = new THREE.Vector3(
     finalScale,
     finalScale
 );
-currentModel.scale.lerp(targetScale, LERP_SCALE);
+currentModel.scale.lerp(targetScale, LERP_SPEED);
 
 // 2. Smooth Position
 const targetPosition = new THREE.Vector3(
@@ -644,24 +586,22 @@ const targetPosition = new THREE.Vector3(
     -(anchorY - 0.5) * planeHeight + devControls.offsetY,
     devControls.offsetZ
 );
-currentModel.position.lerp(targetPosition, LERP_POSITION);
+currentModel.position.lerp(targetPosition, LERP_SPEED);
 
 // 3. Smooth Rotation
-// mirrorOffset is per-model (Math.PI for webcam-mirrored face assets, 0 for watch).
-// Using devControls.mirrorOffset instead of a hardcoded constant lets each model
-// carry its own flip compensation without affecting other assets.
+const mirrorOffset = Math.PI;
 
 const targetEuler = new THREE.Euler(
     currentModel.userData.nativeRotX + devControls.rotX,
     currentModel.userData.nativeRotY + devControls.rotY,
-    currentModel.userData.nativeRotZ - anchorRotation + devControls.mirrorOffset + devControls.rotZ
+    currentModel.userData.nativeRotZ - anchorRotation + mirrorOffset + devControls.rotZ
 );
 
 const targetQuaternion = new THREE.Quaternion().setFromEuler(targetEuler);
 
 currentModel.quaternion.slerp(
     targetQuaternion,
-    LERP_ROTATION
+    LERP_SPEED
 );
 
     // D) Sync Anchor Debug Sphere
