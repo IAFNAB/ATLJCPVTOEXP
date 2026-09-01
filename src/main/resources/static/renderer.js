@@ -77,15 +77,15 @@ function initializeDeveloperTools() {
     // New Transform Folder (Sliders)
     // New Transform Folder (Sliders) - EXPANDED LIMITS FOR BAD PIVOT POINTS
     const transformFolder = developerGui.addFolder("Transform (Item)");
-    
+
     // Increased scale limit to 100 for tiny assets
     transformFolder.add(devControls, 'scale', 0.01, 100.0, 0.1).name('Scale').listen();
-    
+
     // Increased offsets from +/- 5.0 to +/- 20.0 so you can pull flying items back down
     transformFolder.add(devControls, 'offsetX', -20.0, 20.0, 0.1).name('Offset X');
     transformFolder.add(devControls, 'offsetY', -20.0, 20.0, 0.1).name('Offset Y');
     transformFolder.add(devControls, 'offsetZ', -20.0, 20.0, 0.1).name('Offset Z');
-    
+
     transformFolder.add(devControls, 'rotX', -Math.PI, Math.PI, 0.05).name('Pitch (Rot X)');
     transformFolder.add(devControls, 'rotY', -Math.PI, Math.PI, 0.05).name('Yaw (Rot Y)');
     transformFolder.add(devControls, 'rotZ', -Math.PI, Math.PI, 0.05).name('Roll (Rot Z)');
@@ -96,7 +96,7 @@ function initializeDeveloperTools() {
     occFolder.add(devControls, 'occluderOffsetY', -3.0, 3.0, 0.05).name('Offset Y');
     occFolder.add(devControls, 'occluderOffsetZ', -3.0, 3.0, 0.05).name('Offset Z');
 
-// New Lighting Folder (MOVED HERE)
+    // New Lighting Folder (MOVED HERE)
     const lightFolder = developerGui.addFolder("Lighting");
     lightFolder.add(ambientLight, 'intensity', 0.1, 4.0, 0.1).name('Ambient Light');
 
@@ -189,7 +189,7 @@ scene.add(directionalLight);
 // ============================================================================
 // 3.5 OCCLUSION & DEBUG LANDMARKS SETUP
 // ============================================================================
-const headGeometry = new THREE.SphereGeometry(0.6, 32, 32); 
+const headGeometry = new THREE.SphereGeometry(0.6, 32, 32);
 const invisibleOcclusionMaterial = new THREE.MeshBasicMaterial({ colorWrite: false });
 const visibleOcclusionMaterial = new THREE.MeshNormalMaterial({ transparent: true, opacity: 0.4 });
 const headOccluder = new THREE.Mesh(headGeometry, invisibleOcclusionMaterial);
@@ -221,15 +221,15 @@ landmarksGroup.visible = false;
 // 3.6 MOUSE SCROLL SCALING (Tyler's Idea!)
 // ============================================================================
 // Enable mouse interactions on the canvas
-renderer.domElement.style.pointerEvents = 'auto'; 
+renderer.domElement.style.pointerEvents = 'auto';
 
 renderer.domElement.addEventListener('wheel', (event) => {
     if (event.ctrlKey || event.shiftKey) {
         event.preventDefault(); // Stop page scrolling
         // Scroll up = larger, Scroll down = smaller
-        devControls.scale += event.deltaY * -0.001; 
+        devControls.scale += event.deltaY * -0.001;
         if (devControls.scale < 0.01) devControls.scale = 0.01;
-        
+
         // Visually update the slider in the GUI
         developerGui.controllersRecursive().forEach(c => {
             if (c.property === 'scale') c.updateDisplay();
@@ -268,37 +268,37 @@ const loader =
 // Expanded configuration to lock in the exact slider values for each asset.
 const MODEL_CONFIGS = {
     "top_hat.glb": {
-        scale: 0.63, 
-        anchor: 'ears', 
-        offsetX: 0.00, offsetY: 1.05, offsetZ: 0.35, 
-        rotX: 0.45, rotY: 0.00, rotZ: 0.00, 
-        occluderRadius: 0.60, occluderOffsetY: 0.50, occluderOffsetZ: 0.00, 
+        scale: 0.63,
+        anchor: 'ears',
+        offsetX: 0.00, offsetY: 1.05, offsetZ: 0.35,
+        rotX: 0.45, rotY: 0.00, rotZ: 0.00,
+        occluderRadius: 0.60, occluderOffsetY: 0.50, occluderOffsetZ: 0.00,
         showOccluder: false
     },
     "raybanglasses.glb": {
-        scale: 0.63, anchor: 'ears', 
-        offsetX: 0.00, offsetY: 0.00, offsetZ: 0.45, 
-        rotX: 0.00, rotY: 0.00, rotZ: 0.00, 
-        occluderRadius: 0.40, occluderOffsetY: -0.20, occluderOffsetZ: -0.30, 
+        scale: 0.63, anchor: 'ears',
+        offsetX: 0.00, offsetY: 0.00, offsetZ: 0.45,
+        rotX: 0.00, rotY: 0.00, rotZ: 0.00,
+        occluderRadius: 0.40, occluderOffsetY: -0.20, occluderOffsetZ: -0.30,
         showOccluder: false
     },
-    
+
     "female_beach_hat.glb": {
-        scale: 0.60, anchor: 'ears', 
-        offsetX: 0.00, offsetY: 0.95, offsetZ: -1.00, 
-        rotX: 0.50, rotY: 0.00, rotZ: 0.00, 
-        occluderRadius: 0.75, occluderOffsetY: 0.55, occluderOffsetZ: -0.75, 
+        scale: 0.60, anchor: 'ears',
+        offsetX: 0.00, offsetY: 0.95, offsetZ: -1.00,
+        rotX: 0.50, rotY: 0.00, rotZ: 0.00,
+        occluderRadius: 0.75, occluderOffsetY: 0.55, occluderOffsetZ: -0.75,
         showOccluder: false
     },
 
     // NEW WATCH CONFIG
     "handwatch.glb": {
-        scale: 0.20, 
+        scale: 0.20,
         previewScale: 0.60, // <--- Add this dedicated UI scale
-        anchor: 'wrist', 
-        offsetX: 0.00, offsetY: 0.00, offsetZ: 0.00, 
-        rotX: 0.00, rotY: 0.00, rotZ: 0.00, 
-        occluderRadius: 0.40, occluderOffsetY: 0.00, occluderOffsetZ: 0.00, 
+        anchor: 'wrist',
+        offsetX: 0.00, offsetY: 0.00, offsetZ: 0.00,
+        rotX: 0.00, rotY: 0.00, rotZ: 0.00,
+        occluderRadius: 0.40, occluderOffsetY: 0.00, occluderOffsetZ: 0.00,
         showOccluder: false
     }
 };
@@ -313,7 +313,7 @@ const MODEL_CONFIGS = {
  */
 function loadARModel(modelFile) {
     if (assetLoadingMessage) assetLoadingMessage.style.display = "block";
-    
+
     if (currentModel) scene.remove(currentModel);
 
     // I accidentally deleted this loader wrapper in the last step!
@@ -322,19 +322,19 @@ function loadARModel(modelFile) {
         function (gltf) {
             console.log(`Renderer: ${modelFile} loaded successfully.`);
             currentModel = gltf.scene;
-            
+
             // SAVE THE 3D ARTIST'S NATIVE ROTATION BEFORE APPLYING CONFIGS
             const nativeRotX = currentModel.rotation.x;
             const nativeRotY = currentModel.rotation.y;
             const nativeRotZ = currentModel.rotation.z;
 
             // Load the specific configuration or use defaults
-            const config = MODEL_CONFIGS[modelFile] || { 
-                scale: 0.6, anchor: 'nose', 
-                offsetX: 0.0, offsetY: 0.0, offsetZ: 0.0, 
+            const config = MODEL_CONFIGS[modelFile] || {
+                scale: 0.6, anchor: 'nose',
+                offsetX: 0.0, offsetY: 0.0, offsetZ: 0.0,
                 rotX: 0.0, rotY: 0.0, rotZ: 0.0,
-                occluderRadius: 0.6, occluderOffsetY: -0.8, occluderOffsetZ: 0.0, 
-                showOccluder: false 
+                occluderRadius: 0.6, occluderOffsetY: -0.8, occluderOffsetZ: 0.0,
+                showOccluder: false
             };
 
             // Sync the active item's config to the GUI sliders
@@ -357,13 +357,13 @@ function loadARModel(modelFile) {
             }
 
             currentModel.scale.set(config.scale, config.scale, config.scale);
-            currentModel.userData = config; 
-            
+            currentModel.userData = config;
+
             // STORE THE NATIVE ROTATION SAFELY IN USERDATA
             currentModel.userData.nativeRotX = nativeRotX;
             currentModel.userData.nativeRotY = nativeRotY;
             currentModel.userData.nativeRotZ = nativeRotZ;
-            
+
             currentModel.visible = false;
 
             scene.add(currentModel);
@@ -538,10 +538,11 @@ window.updateModelPosition = (landmarks, headTiltAngle, faceWidth) => {
     currentModel.visible = true;
 
     // A) Dynamic Scale based on distance
-    const baselineWidth = 0.15; 
+    const baselineWidth = 0.15;
     let scaleMultiplier = (faceWidth !== undefined && faceWidth > 0) ? (faceWidth / baselineWidth) : 1.0;
+    scaleMultiplier = Math.max(0.5, Math.min(2.0, scaleMultiplier)); // clamp: no runaway size jumps
     const finalScale = devControls.scale * scaleMultiplier;
-    
+
 
     // B) Calculate Anchor Position (Nose vs Ears vs Chest vs Wrist)
     let anchorX = 0, anchorY = 0, anchorRotation = 0;
@@ -558,8 +559,8 @@ window.updateModelPosition = (landmarks, headTiltAngle, faceWidth) => {
         // NEW WRIST LOGIC
         anchorX = landmarks[15].x;
         anchorY = landmarks[15].y;
-        anchorRotation = (landmarks[13]) 
-            ? Math.atan2(landmarks[15].y - landmarks[13].y, landmarks[15].x - landmarks[13].x) 
+        anchorRotation = (landmarks[13])
+            ? Math.atan2(landmarks[15].y - landmarks[13].y, landmarks[15].x - landmarks[13].x)
             : 0;
     } else {
         anchorX = landmarks[0].x;
@@ -568,47 +569,47 @@ window.updateModelPosition = (landmarks, headTiltAngle, faceWidth) => {
     }
 
     // --- LERP SMOOTHING (SHOCK ABSORBER) ---
-// 0.15 means the object travels 15% of the distance to the new point per frame.
-// Lower = smoother but laggy. Higher = faster but jittery.
-const LERP_SPEED = 0.80;
+    // 0.15 means the object travels 15% of the distance to the new point per frame.
+    // Lower = smoother but laggy. Higher = faster but jittery.
+    const LERP_SPEED = 0.80;
 
-// 1. Smooth Scale
-const targetScale = new THREE.Vector3(
-    finalScale,
-    finalScale,
-    finalScale
-);
-currentModel.scale.lerp(targetScale, LERP_SPEED);
+    // 1. Smooth Scale
+    const targetScale = new THREE.Vector3(
+        finalScale,
+        finalScale,
+        finalScale
+    );
+    currentModel.scale.lerp(targetScale, LERP_SPEED);
 
-// 2. Smooth Position
-const targetPosition = new THREE.Vector3(
-    (anchorX - 0.5) * planeWidth + devControls.offsetX,
-    -(anchorY - 0.5) * planeHeight + devControls.offsetY,
-    devControls.offsetZ
-);
-currentModel.position.lerp(targetPosition, LERP_SPEED);
+    // 2. Smooth Position
+    const targetPosition = new THREE.Vector3(
+        (anchorX - 0.5) * planeWidth + devControls.offsetX,
+        -(anchorY - 0.5) * planeHeight + devControls.offsetY,
+        devControls.offsetZ
+    );
+    currentModel.position.lerp(targetPosition, LERP_SPEED);
 
-// 3. Smooth Rotation
-const mirrorOffset = Math.PI;
+    // 3. Smooth Rotation
+    const mirrorOffset = Math.PI;
 
-const targetEuler = new THREE.Euler(
-    currentModel.userData.nativeRotX + devControls.rotX,
-    currentModel.userData.nativeRotY + devControls.rotY,
-    currentModel.userData.nativeRotZ - anchorRotation + mirrorOffset + devControls.rotZ
-);
+    const targetEuler = new THREE.Euler(
+        currentModel.userData.nativeRotX + devControls.rotX,
+        currentModel.userData.nativeRotY + devControls.rotY,
+        currentModel.userData.nativeRotZ - anchorRotation + mirrorOffset + devControls.rotZ
+    );
 
-const targetQuaternion = new THREE.Quaternion().setFromEuler(targetEuler);
+    const targetQuaternion = new THREE.Quaternion().setFromEuler(targetEuler);
 
-currentModel.quaternion.slerp(
-    targetQuaternion,
-    LERP_SPEED
-);
+    currentModel.quaternion.slerp(
+        targetQuaternion,
+        LERP_SPEED
+    );
 
     // D) Sync Anchor Debug Sphere
     anchorDebugSphere.position.set(
         (anchorX - 0.5) * planeWidth,
         -(anchorY - 0.5) * planeHeight,
-        0 
+        0
     );
 
     // E) Sync Head Occluder 
@@ -616,10 +617,10 @@ currentModel.quaternion.slerp(
         headOccluder.visible = true;
         headOccluder.geometry.dispose();
         headOccluder.geometry = new THREE.SphereGeometry(devControls.occluderRadius, 32, 32);
-        
+
         let occX = (landmarks[7] && landmarks[8]) ? (landmarks[7].x + landmarks[8].x) / 2 : anchorX;
         let occY = (landmarks[7] && landmarks[8]) ? (landmarks[7].y + landmarks[8].y) / 2 : anchorY;
-        
+
         headOccluder.position.x = (occX - 0.5) * planeWidth;
         headOccluder.position.y = -(occY - 0.5) * planeHeight + devControls.occluderOffsetY;
         headOccluder.position.z = devControls.occluderOffsetZ;
@@ -672,12 +673,12 @@ function animate() {
     if (previewModel) {
         previewModel.rotation.y += 0.01;
     }
-    
+
     // Toggle Occluder to visible material for debugging
-    headOccluder.material = debugSettings.showOccluder 
-        ? visibleOcclusionMaterial 
+    headOccluder.material = debugSettings.showOccluder
+        ? visibleOcclusionMaterial
         : invisibleOcclusionMaterial;
-    
+
     anchorDebugSphere.visible = debugSettings.showAnchor;
 
     renderer.render(scene, camera);
