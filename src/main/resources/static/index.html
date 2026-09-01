@@ -12,13 +12,13 @@ and handle user interactions.
 -->
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Catalyst Brands Virtual Try On Experience</title>
 
     <style>
-
         /*
          * PAGE LAYOUT
          * Creates space for the AR viewport and the
@@ -113,8 +113,8 @@ and handle user interactions.
             font-weight: bold;
 
             text-shadow:
-                0 0 5px rgba(0,255,208,0.5),
-                0 0 12px rgba(0,255,208,0.8);
+                0 0 5px rgba(0, 255, 208, 0.5),
+                0 0 12px rgba(0, 255, 208, 0.8);
 
             pointer-events: none;
 
@@ -181,7 +181,7 @@ and handle user interactions.
             padding: 15px;
 
             box-shadow:
-                0 4px 12px rgba(0,0,0,0.15);
+                0 4px 12px rgba(0, 0, 0, 0.15);
 
             text-align: center;
         }
@@ -253,7 +253,6 @@ and handle user interactions.
             background: #0078d4;
             color: white;
         }
-
     </style>
 </head>
 
@@ -332,19 +331,16 @@ and handle user interactions.
                 Top Hat
             </div>
             -->
-            
-            <div class="asset-card"
-                 data-model="female_beach_hat.glb">
+
+            <div class="asset-card active" data-model="female_beach_hat.glb">
                 Beach Hat
             </div>
 
-            <div class="asset-card"
-                 data-model="raybanglasses.glb">
+            <div class="asset-card" data-model="raybanglasses.glb">
                 Ray-Ban Glasses
             </div>
 
-              <div class="asset-card"
-                 data-model="handwatch.glb">
+            <div class="asset-card" data-model="handwatch.glb">
                 Wristwatch
             </div>
 
@@ -372,14 +368,17 @@ and handle user interactions.
 
     <!-- Google MediaPipe ML Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js"
+        crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
 
-    <script src="api.js"></script>       <!-- 1. Backend communication methods -->
-    <script src="camera.js"></script>    <!-- 2. Hardware stream initialization -->
-    <script src="tracking.js"></script>  <!-- 3. Computer vision & spatial mapping -->
-    <script src="https://cdn.jsdelivr.net/npm/lil-gui@0.19/dist/lil-gui.umd.min.js"></script> <!-- 4. lil-gui initialization -->
-    <script src="renderer.js"></script>  <!-- 5. 3D Model generation & AR display -->
+    <script src="api.js"></script> <!-- 1. Backend communication methods -->
+    <script src="camera.js"></script> <!-- 2. Hardware stream initialization -->
+    <script src="tracking.js"></script> <!-- 3. Computer vision & spatial mapping -->
+    <script src="https://cdn.jsdelivr.net/npm/lil-gui@0.19/dist/lil-gui.umd.min.js"></script>
+    <!-- 4. lil-gui initialization -->
+    <script src="renderer.js"></script> <!-- 5. 3D Model generation & AR display -->
 
 </body>
+
 </html>
