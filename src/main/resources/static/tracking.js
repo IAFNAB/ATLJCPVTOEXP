@@ -28,26 +28,36 @@ function onResults(results) {
     // we instruct the renderer to hide the active 3D model.
     if (!results.poseLandmarks) {
         if (window.hideModel) window.hideModel();
-        return; 
+        return;
     }
-    
+
     // MediaPipe Pose returns an array of 33 3D bodily landmarks.
     // We grab the ears to calculate the head tilt (Roll) and face width.
-    const leftEar = results.poseLandmarks[7];
+    const leftEar  = results.poseLandmarks[7];
     const rightEar = results.poseLandmarks[8];
-    
-    // Calculate the angle between the ears in radians (Z-Tilt)
+    const nose     = results.poseLandmarks[0]; // Used for yaw estimation
+
+    // Calculate the angle between the ears in radians (Z-Tilt / Roll)
     const deltaY = rightEar.y - leftEar.y;
     const deltaX = rightEar.x - leftEar.x;
     const headTiltAngle = Math.atan2(deltaY, deltaX);
-    
+
     // Calculate face width for dynamic distance scaling
     const faceWidth = Math.sqrt((deltaX * deltaX) + (deltaY * deltaY));
-    
-    // Broadcast the ENTIRE landmark array, plus our calculated tilt and width 
+
+    // Estimate head yaw (Y-axis rotation) from the nose landmark.
+    // When facing the camera the nose sits centered between the ears (yaw = 0).
+    // As the user turns their head, the nose drifts toward the near ear.
+    // Normalizing by faceWidth makes this scale-invariant (works at any distance).
+    // Clamped to ±0.7 to stay safely inside Math.asin's valid domain of [-1, 1].
+    const earMidX         = (leftEar.x + rightEar.x) / 2;
+    const noseOffsetNorm  = Math.max(-0.7, Math.min(0.7, (nose.x - earMidX) / faceWidth));
+    const headYawAngle    = Math.asin(noseOffsetNorm);
+
+    // Broadcast the ENTIRE landmark array, plus our calculated tilt, width, and yaw
     // to our WebGL rendering engine.
     if (window.updateModelPosition) {
-        window.updateModelPosition(results.poseLandmarks, headTiltAngle, faceWidth);
+        window.updateModelPosition(results.poseLandmarks, headTiltAngle, faceWidth, headYawAngle);
     }
 }
 
@@ -55,9 +65,11 @@ function onResults(results) {
 // 2. MEDIAPIPE POSE TRACKER CONFIGURATION
 // ============================================================================
 // Initialize the Pose tracker and dynamically load the required WASM binaries via CDN.
-const poseTracker = new Pose({locateFile: (file) => {
-    return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
-}});
+const poseTracker = new Pose({
+    locateFile: (file) => {
+        return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+    }
+});
 
 // Configure the AI model parameters for a balance of performance and accuracy.
 poseTracker.setOptions({
@@ -77,7 +89,7 @@ poseTracker.onResults(onResults);
 // This utility automatically feeds raw frames into the ML model at the correct resolution.
 const mlCamera = new Camera(videoElement, {
     onFrame: async () => {
-        await poseTracker.send({image: videoElement});
+        await poseTracker.send({ image: videoElement });
     },
     width: 640,
     height: 480
