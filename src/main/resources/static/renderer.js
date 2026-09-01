@@ -285,7 +285,7 @@ const MODEL_CONFIGS = {
 
     "female_beach_hat.glb": {
         scale: 0.60, anchor: 'ears',
-        offsetX: 0.00, offsetY: 0.95, offsetZ: -1.00,
+        offsetX: 0.00, offsetY: 0.75, offsetZ: -1.00,
         rotX: 0.50, rotY: 0.00, rotZ: 0.00,
         occluderRadius: 0.75, occluderOffsetY: 0.55, occluderOffsetZ: -0.75,
         showOccluder: false
