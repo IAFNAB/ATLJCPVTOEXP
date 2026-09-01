@@ -277,7 +277,7 @@ const MODEL_CONFIGS = {
     },
     "raybanglasses.glb": {
         scale: 0.63, anchor: 'ears',
-        offsetX: 0.00, offsetY: 0.00, offsetZ: 0.45,
+        offsetX: 0.00, offsetY: 0.01, offsetZ: 0.45,
         rotX: 0.00, rotY: 0.00, rotZ: 0.00,
         occluderRadius: 0.40, occluderOffsetY: -0.20, occluderOffsetZ: -0.30,
         showOccluder: false
