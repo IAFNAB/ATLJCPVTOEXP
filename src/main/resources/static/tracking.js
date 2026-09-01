@@ -35,7 +35,6 @@ function onResults(results) {
     // We grab the ears to calculate the head tilt (Roll) and face width.
     const leftEar  = results.poseLandmarks[7];
     const rightEar = results.poseLandmarks[8];
-    const nose     = results.poseLandmarks[0]; // Used for yaw estimation
 
     // Calculate the angle between the ears in radians (Z-Tilt / Roll)
     const deltaY = rightEar.y - leftEar.y;
@@ -45,14 +44,14 @@ function onResults(results) {
     // Calculate face width for dynamic distance scaling
     const faceWidth = Math.sqrt((deltaX * deltaX) + (deltaY * deltaY));
 
-    // Estimate head yaw (Y-axis rotation) from the nose landmark.
-    // When facing the camera the nose sits centered between the ears (yaw = 0).
-    // As the user turns their head, the nose drifts toward the near ear.
-    // Normalizing by faceWidth makes this scale-invariant (works at any distance).
-    // Clamped to ±0.7 to stay safely inside Math.asin's valid domain of [-1, 1].
-    const earMidX         = (leftEar.x + rightEar.x) / 2;
-    const noseOffsetNorm  = Math.max(-0.7, Math.min(0.7, (nose.x - earMidX) / faceWidth));
-    const headYawAngle    = Math.asin(noseOffsetNorm);
+    // Estimate head yaw (Y-axis rotation) from ear DEPTH difference.
+    // When facing the camera both ears are at roughly the same Z depth (yaw = 0).
+    // As the user turns, the near ear comes forward (lower Z) and the far ear
+    // pushes back (higher Z). This is symmetric — unlike the nose-offset method,
+    // it doesn't matter which ear MediaPipe occludes because the depth gap
+    // grows equally in both directions.
+    const earDeltaZ    = leftEar.z - rightEar.z;
+    const headYawAngle = Math.atan2(earDeltaZ, faceWidth);
 
     // Broadcast the ENTIRE landmark array, plus our calculated tilt, width, and yaw
     // to our WebGL rendering engine.
