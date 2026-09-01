@@ -541,7 +541,13 @@ window.updateModelPosition = (landmarks, headTiltAngle, faceWidth) => {
     const baselineWidth = 0.15;
     let scaleMultiplier = (faceWidth !== undefined && faceWidth > 0) ? (faceWidth / baselineWidth) : 1.0;
     scaleMultiplier = Math.max(0.5, Math.min(2.0, scaleMultiplier)); // clamp: no runaway size jumps
-    const finalScale = devControls.scale * scaleMultiplier;
+
+    // B) True 3D Depth — derive world-space Z from the face-width distance proxy.
+    // At baseline (scaleMultiplier=1) the model sits at z=0 (camera is at z=5).
+    // Moving closer raises worldZ toward the camera; moving back pushes it negative.
+    const depth = camera.position.z / scaleMultiplier; // perspective distance from camera
+    const worldZ = camera.position.z - depth;          // Three.js world Z position
+    const perspFactor = depth / camera.position.z;     // = 1/scaleMultiplier, corrects X/Y at depth
 
 
     // B) Calculate Anchor Position (Nose vs Ears vs Chest vs Wrist)
@@ -573,19 +579,16 @@ window.updateModelPosition = (landmarks, headTiltAngle, faceWidth) => {
     // Lower = smoother but laggy. Higher = faster but jittery.
     const LERP_SPEED = 0.80;
 
-    // 1. Smooth Scale
-    const targetScale = new THREE.Vector3(
-        finalScale,
-        finalScale,
-        finalScale
-    );
+    // 1. Smooth Scale — true world-unit scale only; perspective projection handles apparent size
+    const finalScale = devControls.scale;
+    const targetScale = new THREE.Vector3(finalScale, finalScale, finalScale);
     currentModel.scale.lerp(targetScale, LERP_SPEED);
 
-    // 2. Smooth Position
+    // 2. Smooth Position — perspective-correct X/Y at the computed depth, true Z
     const targetPosition = new THREE.Vector3(
-        (anchorX - 0.5) * planeWidth + devControls.offsetX,
-        -(anchorY - 0.5) * planeHeight + devControls.offsetY,
-        devControls.offsetZ
+        (anchorX - 0.5) * planeWidth * perspFactor + devControls.offsetX,
+        -(anchorY - 0.5) * planeHeight * perspFactor + devControls.offsetY,
+        worldZ + devControls.offsetZ
     );
     currentModel.position.lerp(targetPosition, LERP_SPEED);
 
@@ -607,9 +610,9 @@ window.updateModelPosition = (landmarks, headTiltAngle, faceWidth) => {
 
     // D) Sync Anchor Debug Sphere
     anchorDebugSphere.position.set(
-        (anchorX - 0.5) * planeWidth,
-        -(anchorY - 0.5) * planeHeight,
-        0
+        (anchorX - 0.5) * planeWidth * perspFactor,
+        -(anchorY - 0.5) * planeHeight * perspFactor,
+        worldZ
     );
 
     // E) Sync Head Occluder 
@@ -621,10 +624,10 @@ window.updateModelPosition = (landmarks, headTiltAngle, faceWidth) => {
         let occX = (landmarks[7] && landmarks[8]) ? (landmarks[7].x + landmarks[8].x) / 2 : anchorX;
         let occY = (landmarks[7] && landmarks[8]) ? (landmarks[7].y + landmarks[8].y) / 2 : anchorY;
 
-        headOccluder.position.x = (occX - 0.5) * planeWidth;
-        headOccluder.position.y = -(occY - 0.5) * planeHeight + devControls.occluderOffsetY;
-        headOccluder.position.z = devControls.occluderOffsetZ * scaleMultiplier;
-        headOccluder.scale.set(scaleMultiplier, scaleMultiplier, scaleMultiplier);
+        headOccluder.position.x = (occX - 0.5) * planeWidth * perspFactor;
+        headOccluder.position.y = -(occY - 0.5) * planeHeight * perspFactor + devControls.occluderOffsetY;
+        headOccluder.position.z = worldZ + devControls.occluderOffsetZ;
+        headOccluder.scale.set(1, 1, 1); // world-unit radius stays constant; perspective handles size
     } else {
         headOccluder.visible = false;
     }
